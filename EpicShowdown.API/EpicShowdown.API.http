@@ -1,0 +1,6 @@
+@EpicShowdown.API_HostAddress = http://localhost:5147
+
+GET {{EpicShowdown.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
