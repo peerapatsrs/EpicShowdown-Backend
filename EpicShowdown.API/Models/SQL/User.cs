@@ -7,7 +7,7 @@ using EpicShowdown.API.Data.Base;
 namespace EpicShowdown.API.Models;
 
 [Table("Users")]
-public class User : Data.Base.Entity<int>
+public class User : Entity<int>
 {
     [Required]
     [StringLength(50)]
@@ -23,6 +23,7 @@ public class User : Data.Base.Entity<int>
     public string? FirstName { get; set; }
     [StringLength(100)]
     public string? LastName { get; set; }
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime? DateOfBirth { get; set; }
     [StringLength(20)]
     public string? PhoneNumber { get; set; }
@@ -31,7 +32,10 @@ public class User : Data.Base.Entity<int>
     [StringLength(255)]
     public string? ProfilePicture { get; set; }
     public bool IsActive { get; set; } = true;
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime? LastLoginDate { get; set; }
+    [StringLength(50)]
+    public string Role { get; set; } = "User";
 
     public void SetPassword(string password)
     {

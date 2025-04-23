@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Globalization;
 
 namespace EpicShowdown.API.Data.Base;
 
@@ -67,8 +69,10 @@ public abstract class Entity<TKey> : IEntity<TKey>
     }
 
     [Required]
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     [Required]
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

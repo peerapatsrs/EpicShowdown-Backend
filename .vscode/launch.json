@@ -19,13 +19,14 @@
         "uriFormat": "%s/swagger"
       },
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PATH": "${env:PATH}:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       },
       "pipeTransport": {
         "pipeCwd": "${workspaceFolder}",
-        "pipeProgram": "/bin/bash",
-        "pipeArgs": ["-c"],
-        "debuggerPath": "/Applications/Cursor.app/Contents/Frameworks/netcoredbg/netcoredbg",
+        "pipeProgram": "/bin/zsh",
+        "pipeArgs": ["-l", "-c"],
+        "debuggerPath": "/Library/Netcoredbg/netcoredbg",
         "debuggerArgs": ["--interpreter=vscode"],
         "quoteArgs": true
       }
@@ -37,9 +38,9 @@
       "processId": "${command:pickProcess}",
       "pipeTransport": {
         "pipeCwd": "${workspaceFolder}",
-        "pipeProgram": "/bin/bash",
-        "pipeArgs": ["-c"],
-        "debuggerPath": "/Applications/Cursor.app/Contents/Frameworks/netcoredbg/netcoredbg",
+        "pipeProgram": "/bin/zsh",
+        "pipeArgs": ["-l", "-c"],
+        "debuggerPath": "/Library/Netcoredbg/netcoredbg",
         "debuggerArgs": ["--interpreter=vscode"],
         "quoteArgs": true
       }

@@ -33,7 +33,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : Entity<int>
 
     public virtual Task UpdateAsync(T entity)
     {
-        entity.UpdatedAt = DateTime.Now;
+        entity.UpdatedAt = DateTime.UtcNow;
         _context.Entry(entity).State = EntityState.Modified;
         return Task.CompletedTask;
     }

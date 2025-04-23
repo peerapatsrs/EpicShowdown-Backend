@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using EpicShowdown.API.Models;
 using EpicShowdown.API.Repositories;
+using EpicShowdown.API.Models.Redis;
+using EpicShowdown.API.Models.Requests;
+using EpicShowdown.API.Services;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EpicShowdown.API.Controllers;
 
@@ -12,19 +13,23 @@ namespace EpicShowdown.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
     private readonly IUserRepository _userRepository;
+    private readonly IJwtService _jwtService;
+    private readonly IRefreshTokenService _refreshTokenService;
 
-    public AuthController(IConfiguration configuration, IUserRepository userRepository)
+    public AuthController(
+        IUserRepository userRepository,
+        IJwtService jwtService,
+        IRefreshTokenService refreshTokenService)
     {
-        _configuration = configuration;
         _userRepository = userRepository;
+        _jwtService = jwtService;
+        _refreshTokenService = refreshTokenService;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        // ตรวจสอบว่ามี username หรือ email ซ้ำหรือไม่
         if (await _userRepository.ExistsByUsernameAsync(request.Username))
         {
             return BadRequest(new { message = "Username already exists" });
@@ -35,28 +40,17 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Email already exists" });
         }
 
-        // สร้าง user ใหม่
-        var user = new User
-        {
-            Username = request.Username,
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            DateOfBirth = request.DateOfBirth,
-            PhoneNumber = request.PhoneNumber,
-            Address = request.Address
-        };
-
-        // ตั้งรหัสผ่าน
-        user.SetPassword(request.Password);
-
-        // บันทึกลงฐานข้อมูล
+        var user = CreateUserFromRequest(request);
         await _userRepository.AddAsync(user);
         await _userRepository.SaveChangesAsync();
 
-        // สร้าง token และส่งกลับ
-        var token = GenerateJwtToken(user.Username);
-        return Ok(new { token });
+        var (accessToken, refreshToken) = await GenerateTokensAsync(user);
+
+        return Ok(new
+        {
+            accessToken,
+            refreshToken = refreshToken.Token
+        });
     }
 
     [HttpPost("login")]
@@ -68,53 +62,102 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid username or password" });
         }
 
-        // อัปเดต last login date
-        user.LastLoginDate = DateTime.Now;
-        await _userRepository.UpdateAsync(user);
-        await _userRepository.SaveChangesAsync();
+        var (accessToken, refreshToken) = await GenerateTokensAsync(user);
 
-        var token = GenerateJwtToken(user.Username);
-        return Ok(new { token });
+        return Ok(new
+        {
+            accessToken,
+            refreshToken = refreshToken.Token
+        });
     }
 
-    private string GenerateJwtToken(string username)
+    [HttpPost("refresh-token")]
+    [Authorize]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        var secretKey = _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
+        var refreshToken = await _refreshTokenService.GetRefreshTokenAsync(request.RefreshToken);
+        if (refreshToken == null)
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            return BadRequest(new { message = "Invalid refresh token" });
+        }
+
+        if (refreshToken.IsRevoked)
+        {
+            return BadRequest(new { message = "Refresh token has been revoked" });
+        }
+
+        if (refreshToken.ExpiryDate < DateTime.UtcNow)
+        {
+            return BadRequest(new { message = "Refresh token has expired" });
+        }
+
+        var user = await _userRepository.GetByIdAsync(refreshToken.UserId);
+        if (user == null)
+        {
+            return BadRequest(new { message = "User not found" });
+        }
+
+        var (accessToken, newRefreshToken) = await GenerateTokensAsync(user);
+        await _refreshTokenService.RotateRefreshTokenAsync(request.RefreshToken, GetIpAddress());
+
+        return Ok(new
+        {
+            accessToken,
+            refreshToken = newRefreshToken.Token
+        });
+    }
+
+    [HttpPost("revoke-token")]
+    [Authorize]
+    public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenRequest request)
+    {
+        var refreshToken = await _refreshTokenService.GetRefreshTokenAsync(request.RefreshToken);
+        if (refreshToken == null)
+        {
+            return BadRequest(new { message = "Invalid refresh token" });
+        }
+
+        await _refreshTokenService.RevokeRefreshTokenAsync(request.RefreshToken, GetIpAddress(), request.Reason);
+        return Ok(new { message = "Token revoked successfully" });
+    }
+
+    private string GetIpAddress()
+    {
+        var ipAddress = Request.Headers["X-Forwarded-For"].FirstOrDefault() ??
+            HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ??
+            "unknown";
+        return ipAddress;
+    }
+
+    private User CreateUserFromRequest(RegisterRequest request)
+    {
+        var user = new User
+        {
+            Username = request.Username,
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            DateOfBirth = request.DateOfBirth,
+            PhoneNumber = request.PhoneNumber,
+            Address = request.Address
         };
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JwtSettings:ExpirationInMinutes"])),
-            signingCredentials: credentials
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        user.SetPassword(request.Password);
+        return user;
     }
-}
 
-public class LoginRequest
-{
-    public required string Username { get; set; }
-    public required string Password { get; set; }
-}
+    private async Task<(string accessToken, RefreshToken refreshToken)> GenerateTokensAsync(User user)
+    {
+        var claims = new[]
+        {
+            new Claim("UserId", user.Id.ToString()),
+            new Claim("Username", user.Username),
+            new Claim("UserRole", user.Role)
+        };
 
-public class RegisterRequest
-{
-    public required string Username { get; set; }
-    public required string Email { get; set; }
-    public required string Password { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public DateTime? DateOfBirth { get; set; }
-    public string? PhoneNumber { get; set; }
-    public string? Address { get; set; }
+        var accessToken = _jwtService.GenerateAccessToken(claims);
+        var refreshToken = await _refreshTokenService.GenerateRefreshTokenAsync(user.Id, GetIpAddress());
+
+        return (accessToken, refreshToken);
+    }
 }

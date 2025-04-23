@@ -14,6 +14,7 @@ using System.Net.Http.Headers;
 using EpicShowdown.API.Infrastructure;
 using EpicShowdown.API.Models;
 using EpicShowdown.API.Repositories;
+using EpicShowdown.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,13 +67,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configure PostgreSQL
+// Configure Database
 builder.Services.AddDbContext<EpicShowdown.API.Data.ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("DefaultConnection is not configured")));
 
+// Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Configure Redis
+// Register Services
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IRefreshTokenService, RedisRefreshTokenService>();
+
+// Register Infrastructure Services
 var redisConnection = builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("RedisConnection is not configured");
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(redisConnection));
