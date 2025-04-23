@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/EpicShowdown.Api.csproj": {}
+    "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/EpicShowdown.API.csproj": {}
   },
   "projects": {
-    "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/EpicShowdown.Api.csproj": {
+    "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/EpicShowdown.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/EpicShowdown.Api.csproj",
-        "projectName": "EpicShowdown.Api",
-        "projectPath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/EpicShowdown.Api.csproj",
+        "projectUniqueName": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/EpicShowdown.API.csproj",
+        "projectName": "EpicShowdown.API",
+        "projectPath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/EpicShowdown.API.csproj",
         "packagesPath": "/Users/peerapat.su/.nuget/packages/",
-        "outputPath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/obj/",
+        "outputPath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/peerapat.su/.nuget/NuGet/NuGet.Config"

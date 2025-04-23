@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "E4xf/XUqlgo=",
+  "dgSpecHash": "0xiohuiRV3M=",
   "success": true,
-  "projectFilePath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.Api/EpicShowdown.Api.csproj",
+  "projectFilePath": "/Users/peerapat.su/Toey/Project/EpicShowdown/EpicShowdown-Backend/EpicShowdown-Backend/EpicShowdown.API/EpicShowdown.API.csproj",
   "expectedPackageFiles": [
     "/Users/peerapat.su/.nuget/packages/dapper/2.0.123/dapper.2.0.123.nupkg.sha512",
     "/Users/peerapat.su/.nuget/packages/hangfire.aspnetcore/1.8.18/hangfire.aspnetcore.1.8.18.nupkg.sha512",
