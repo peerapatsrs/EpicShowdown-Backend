@@ -1,0 +1,22 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=epicshowdown;Username=postgres;Password=postgres",
+    "RedisConnection": "localhost:6379"
+  },
+  "JwtSettings": {
+    "SecretKey": "your-super-secret-key-with-at-least-32-characters",
+    "Issuer": "epicshowdown-api",
+    "Audience": "epicshowdown-client",
+    "ExpirationInMinutes": 60
+  },
+  "Hangfire": {
+    "ConnectionString": "Host=localhost;Port=5432;Database=epicshowdown;Username=postgres;Password=postgres;Search Path=hangfire",
+    "Authentication": {
+      "Username": "admin",
+      "Password": "your-hangfire-password"
+    }
+  },
+  "Stripe": {
+    "SecretKey": "your-stripe-secret-key"
+  }
+} 
