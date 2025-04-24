@@ -43,6 +43,7 @@ bld/
 
 # Environment Files
 *.env
+appsettings.*.json
 # IDE - JetBrains Rider
 .idea/
 *.sln.iml
