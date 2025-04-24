@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/EpicShowdown.Api.props" />
-</Project>
