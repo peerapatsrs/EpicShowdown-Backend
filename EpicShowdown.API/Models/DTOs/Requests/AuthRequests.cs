@@ -1,4 +1,4 @@
-namespace EpicShowdown.API.Models.Requests;
+namespace EpicShowdown.API.Models.DTOs.Requests;
 
 public class LoginRequest
 {

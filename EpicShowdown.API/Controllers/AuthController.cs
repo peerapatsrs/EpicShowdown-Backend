@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using EpicShowdown.API.Models;
+using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Repositories;
 using EpicShowdown.API.Models.Redis;
-using EpicShowdown.API.Models.Requests;
+using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;

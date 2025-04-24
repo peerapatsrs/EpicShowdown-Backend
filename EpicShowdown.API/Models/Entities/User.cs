@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using EpicShowdown.API.Data.Base;
 
-namespace EpicShowdown.API.Models;
+namespace EpicShowdown.API.Models.Entities;
 
 [Table("Users")]
 public class User : Entity<int>

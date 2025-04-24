@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using EpicShowdown.API.Data;
-using EpicShowdown.API.Models;
+using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Data.Base;
 namespace EpicShowdown.API.Repositories;
 

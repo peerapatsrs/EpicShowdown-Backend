@@ -1,4 +1,4 @@
-namespace EpicShowdown.API.Models;
+namespace EpicShowdown.API.Models.DTOs.Responses;
 
 public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {

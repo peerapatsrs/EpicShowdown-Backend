@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using EpicShowdown.API.Models;
+using EpicShowdown.API.Models.Entities;
 
 namespace EpicShowdown.API.Data;
 
