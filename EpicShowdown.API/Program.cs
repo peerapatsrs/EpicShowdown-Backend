@@ -15,6 +15,7 @@ using EpicShowdown.API.Infrastructure;
 using EpicShowdown.API.Models;
 using EpicShowdown.API.Repositories;
 using EpicShowdown.API.Services;
+using AutoMapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,6 +105,8 @@ builder.Services.AddHangfire(config => config
     }));
 
 builder.Services.AddHangfireServer();
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var app = builder.Build();
 

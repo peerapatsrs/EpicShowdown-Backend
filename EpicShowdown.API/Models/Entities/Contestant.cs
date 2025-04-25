@@ -8,19 +8,12 @@ namespace EpicShowdown.API.Models.Entities
     public class Contestant : Entity<int>
     {
         [Required]
-        [StringLength(50)]
-        public string FirstName { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string FieldName { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(50)]
-        public string LastName { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string Description { get; set; } = string.Empty;
-
-        // Dynamic properties stored as JSON
         [Column(TypeName = "nvarchar(max)")]
-        public string AdditionalProperties { get; set; } = "{}";
+        public string Value { get; set; } = string.Empty;
 
         public int ContestId { get; set; }
         [ForeignKey("ContestId")]

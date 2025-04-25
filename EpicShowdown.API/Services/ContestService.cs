@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using AutoMapper;
 using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Models.DTOs.Responses;
@@ -23,38 +24,39 @@ namespace EpicShowdown.API.Services
     public class ContestService : IContestService
     {
         private readonly IContestRepository _contestRepository;
+        private readonly IContestantFieldRepository _fieldRepository;
+        private readonly IMapper _mapper;
 
-        public ContestService(IContestRepository contestRepository)
+        public ContestService(
+            IContestRepository contestRepository,
+            IContestantFieldRepository fieldRepository,
+            IMapper mapper)
         {
             _contestRepository = contestRepository;
+            _fieldRepository = fieldRepository;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<ContestResponse>> GetAllContestsAsync()
         {
             var contests = await _contestRepository.GetAllAsync();
-            return contests.Select(MapToContestResponse);
+            return _mapper.Map<IEnumerable<ContestResponse>>(contests);
         }
 
         public async Task<ContestResponse?> GetContestByCodeAsync(Guid contestCode)
         {
             var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
-            return contest != null ? MapToContestResponse(contest) : null;
+            return contest != null ? _mapper.Map<ContestResponse>(contest) : null;
         }
 
         public async Task<ContestResponse> CreateContestAsync(CreateContestRequest request)
         {
-            var contest = new Contest
-            {
-                Name = request.Name,
-                Description = request.Description,
-                StartDate = request.StartDate,
-                EndDate = request.EndDate,
-                CreatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+            var contest = _mapper.Map<Contest>(request);
+            contest.CreatedAt = DateTime.UtcNow;
+            contest.IsActive = true;
 
             var createdContest = await _contestRepository.CreateAsync(contest);
-            return MapToContestResponse(createdContest);
+            return _mapper.Map<ContestResponse>(createdContest);
         }
 
         public async Task<ContestResponse> UpdateContestByCodeAsync(Guid code, UpdateContestRequest request)
@@ -63,15 +65,11 @@ namespace EpicShowdown.API.Services
             if (existingContest == null)
                 throw new ArgumentException("Contest not found");
 
-            existingContest.Name = request.Name;
-            existingContest.Description = request.Description;
-            existingContest.StartDate = request.StartDate;
-            existingContest.EndDate = request.EndDate;
-            existingContest.IsActive = request.IsActive;
+            _mapper.Map(request, existingContest);
             existingContest.UpdatedAt = DateTime.UtcNow;
 
             var updatedContest = await _contestRepository.UpdateAsync(existingContest);
-            return MapToContestResponse(updatedContest);
+            return _mapper.Map<ContestResponse>(updatedContest);
         }
 
         public async Task<bool> DeleteContestAsync(Guid code)
@@ -90,7 +88,7 @@ namespace EpicShowdown.API.Services
                 throw new ArgumentException("Contest not found");
 
             var contestants = await _contestRepository.GetContestantsByContestIdAsync(contest.Id);
-            return contestants.Select(MapToContestantResponse);
+            return _mapper.Map<IEnumerable<ContestantResponse>>(contestants);
         }
 
         public async Task<ContestantResponse> AddContestantToContestAsync(Guid code, Contestant contestant)
@@ -102,41 +100,10 @@ namespace EpicShowdown.API.Services
             contestant.ContestId = contest.Id;
             contestant.CreatedAt = DateTime.UtcNow;
 
-            // Add contestant to contest
             contest.Contestants.Add(contestant);
             await _contestRepository.UpdateAsync(contest);
 
-            return MapToContestantResponse(contestant);
-        }
-
-        private static ContestResponse MapToContestResponse(Contest contest)
-        {
-            return new ContestResponse
-            {
-                ContestCode = contest.ContestCode,
-                Name = contest.Name,
-                Description = contest.Description,
-                StartDate = contest.StartDate,
-                EndDate = contest.EndDate,
-                IsActive = contest.IsActive,
-                CreatedAt = contest.CreatedAt,
-                UpdatedAt = contest.UpdatedAt,
-                Contestants = contest.Contestants.Select(MapToContestantResponse).ToList()
-            };
-        }
-
-        private static ContestantResponse MapToContestantResponse(Contestant contestant)
-        {
-            return new ContestantResponse
-            {
-                Id = contestant.Id,
-                FirstName = contestant.FirstName,
-                LastName = contestant.LastName,
-                Description = contestant.Description,
-                AdditionalProperties = contestant.AdditionalProperties,
-                CreatedAt = contestant.CreatedAt,
-                UpdatedAt = contestant.UpdatedAt
-            };
+            return _mapper.Map<ContestantResponse>(contestant);
         }
     }
 }

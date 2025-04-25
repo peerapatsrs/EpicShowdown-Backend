@@ -20,7 +20,8 @@ namespace EpicShowdown.API.Models.Entities
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; }
 
-        // Navigation property
+        // Navigation properties
         public virtual ICollection<Contestant> Contestants { get; set; } = new List<Contestant>();
+        public virtual ICollection<ContestantField> Fields { get; set; } = new List<ContestantField>();
     }
 }
