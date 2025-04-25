@@ -17,6 +17,7 @@ public class User : Entity<int>
 
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
+
     [StringLength(100)]
     public string? FirstName { get; set; }
     [StringLength(100)]

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using EpicShowdown.API.Models.Entities;
+using EpicShowdown.API.Models;
 
 namespace EpicShowdown.API.Data;
 
@@ -13,9 +14,17 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Contest> Contests { get; set; }
+    public DbSet<Contestant> Contestants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Contest>()
+            .HasMany(c => c.Contestants)
+            .WithOne(c => c.Contest)
+            .HasForeignKey(c => c.ContestId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
