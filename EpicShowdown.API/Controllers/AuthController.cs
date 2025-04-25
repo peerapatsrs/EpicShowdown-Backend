@@ -30,11 +30,6 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        if (await _userRepository.ExistsByUsernameAsync(request.Username))
-        {
-            return BadRequest(new { message = "Username already exists" });
-        }
-
         if (await _userRepository.ExistsByEmailAsync(request.Email))
         {
             return BadRequest(new { message = "Email already exists" });
@@ -56,10 +51,10 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _userRepository.GetByUsernameAsync(request.Username);
+        var user = await _userRepository.GetByEmailAsync(request.Email);
         if (user == null || !user.VerifyPassword(request.Password))
         {
-            return Unauthorized(new { message = "Invalid username or password" });
+            return Unauthorized(new { message = "Invalid email or password" });
         }
 
         var (accessToken, refreshToken) = await GenerateTokensAsync(user);
@@ -133,13 +128,7 @@ public class AuthController : ControllerBase
     {
         var user = new User
         {
-            Username = request.Username,
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            DateOfBirth = request.DateOfBirth,
-            PhoneNumber = request.PhoneNumber,
-            Address = request.Address
+            Email = request.Email
         };
 
         user.SetPassword(request.Password);
@@ -150,8 +139,8 @@ public class AuthController : ControllerBase
     {
         var claims = new[]
         {
-            new Claim("UserId", user.Id.ToString()),
-            new Claim("Username", user.Username),
+            new Claim("UserCode", user.UserCode.ToString()),
+            new Claim("Email", user.Email),
             new Claim("UserRole", user.Role)
         };
 

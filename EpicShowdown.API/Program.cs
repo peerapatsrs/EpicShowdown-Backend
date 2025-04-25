@@ -77,11 +77,17 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RedisRefreshTokenService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddHttpContextAccessor();
 
 // Register Infrastructure Services
 var redisConnection = builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("RedisConnection is not configured");
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect(redisConnection));
+{
+    var config = ConfigurationOptions.Parse(redisConnection);
+    config.AbortOnConnectFail = false;
+    return ConnectionMultiplexer.Connect(config);
+});
 
 // Configure SignalR
 builder.Services.AddSignalR();

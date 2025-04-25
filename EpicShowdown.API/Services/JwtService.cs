@@ -5,6 +5,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace EpicShowdown.API.Services;
 
+public interface IJwtService
+{
+    string GenerateAccessToken(Claim[] claims);
+    string GenerateRefreshToken();
+}
+
 public class JwtService : IJwtService
 {
     private readonly IConfiguration _configuration;

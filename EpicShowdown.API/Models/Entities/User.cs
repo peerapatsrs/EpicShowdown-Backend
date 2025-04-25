@@ -9,9 +9,7 @@ namespace EpicShowdown.API.Models.Entities;
 [Table("Users")]
 public class User : Entity<int>
 {
-    [Required]
-    [StringLength(50)]
-    public string Username { get; set; } = string.Empty;
+    public Guid UserCode { get; set; } = Guid.NewGuid();
 
     [Required]
     [StringLength(100)]
