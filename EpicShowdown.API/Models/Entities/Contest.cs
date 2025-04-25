@@ -19,6 +19,7 @@ namespace EpicShowdown.API.Models.Entities
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool IsActive { get; set; }
+        public required User CreatedBy { get; set; }
 
         // Navigation properties
         public virtual ICollection<Contestant> Contestants { get; set; } = new List<Contestant>();

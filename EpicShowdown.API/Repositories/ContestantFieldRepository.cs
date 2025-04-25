@@ -13,6 +13,7 @@ namespace EpicShowdown.API.Repositories
         Task<ContestantField> CreateAsync(ContestantField field);
         Task<ContestantField> UpdateAsync(ContestantField field);
         Task<bool> DeleteAsync(int id);
+        Task<ContestantField?> GetByNameAndContestIdAsync(string name, int contestId);
     }
 
     public class ContestantFieldRepository : IContestantFieldRepository
@@ -60,6 +61,12 @@ namespace EpicShowdown.API.Repositories
             _context.ContestantFields.Remove(field);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<ContestantField?> GetByNameAndContestIdAsync(string name, int contestId)
+        {
+            return await _context.ContestantFields
+                .FirstOrDefaultAsync(f => f.Name == name && f.ContestId == contestId);
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using EpicShowdown.API.Data;
 using EpicShowdown.API.Models.Entities;
+using EpicShowdown.API.Services;
 
 namespace EpicShowdown.API.Repositories
 {
@@ -21,10 +22,14 @@ namespace EpicShowdown.API.Repositories
     public class ContestRepository : IContestRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ICurrentUserService _currentUserService;
 
-        public ContestRepository(ApplicationDbContext context)
+        public ContestRepository(
+            ApplicationDbContext context,
+            ICurrentUserService currentUserService)
         {
             _context = context;
+            _currentUserService = currentUserService;
         }
 
         public async Task<IEnumerable<Contest>> GetAllAsync()
@@ -50,6 +55,11 @@ namespace EpicShowdown.API.Repositories
 
         public async Task<Contest> CreateAsync(Contest contest)
         {
+            var currentUser = await _currentUserService.GetCurrentUser();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            contest.CreatedBy = currentUser;
             _context.Contests.Add(contest);
             await _context.SaveChangesAsync();
             return contest;

@@ -7,6 +7,7 @@ using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Models.DTOs.Responses;
 using EpicShowdown.API.Repositories;
+using EpicShowdown.API.Models.Enums;
 
 namespace EpicShowdown.API.Services
 {
@@ -18,7 +19,9 @@ namespace EpicShowdown.API.Services
         Task<ContestResponse> UpdateContestByCodeAsync(Guid code, UpdateContestRequest request);
         Task<bool> DeleteContestAsync(Guid code);
         Task<IEnumerable<ContestantResponse>> GetContestantsByContestCodeAsync(Guid code);
-        Task<ContestantResponse> AddContestantToContestAsync(Guid code, Contestant contestant);
+        Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request);
+        Task<ContestantResponse> UpdateContestantAsync(Guid contestCode, int contestantId, UpdateContestantRequest request);
+        Task DeleteContestantAsync(Guid contestCode, int contestantId);
     }
 
     public class ContestService : IContestService
@@ -91,12 +94,20 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<IEnumerable<ContestantResponse>>(contestants);
         }
 
-        public async Task<ContestantResponse> AddContestantToContestAsync(Guid code, Contestant contestant)
+        public async Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request)
         {
-            var contest = await _contestRepository.GetByContestCodeAsync(code);
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
+            var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
+            if (field == null)
+                throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
+
+            if (!ValidateFieldValue(field.Type, request.Value))
+                throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
+
+            var contestant = _mapper.Map<Contestant>(request);
             contestant.ContestId = contest.Id;
             contestant.CreatedAt = DateTime.UtcNow;
 
@@ -104,6 +115,69 @@ namespace EpicShowdown.API.Services
             await _contestRepository.UpdateAsync(contest);
 
             return _mapper.Map<ContestantResponse>(contestant);
+        }
+
+        public async Task<ContestantResponse> UpdateContestantAsync(Guid contestCode, int contestantId, UpdateContestantRequest request)
+        {
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
+            if (contest == null)
+                throw new ArgumentException("Contest not found");
+
+            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            if (contestant == null)
+                throw new ArgumentException("Contestant not found");
+
+            if (request.FieldName != null)
+            {
+                var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
+                if (field == null)
+                    throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
+
+                if (request.Value != null && !ValidateFieldValue(field.Type, request.Value))
+                    throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
+            }
+
+            _mapper.Map(request, contestant);
+            contestant.UpdatedAt = DateTime.UtcNow;
+
+            await _contestRepository.UpdateAsync(contest);
+            return _mapper.Map<ContestantResponse>(contestant);
+        }
+
+        public async Task DeleteContestantAsync(Guid contestCode, int contestantId)
+        {
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
+            if (contest == null)
+                throw new ArgumentException("Contest not found");
+
+            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            if (contestant == null)
+                throw new ArgumentException("Contestant not found");
+
+            contest.Contestants.Remove(contestant);
+            await _contestRepository.UpdateAsync(contest);
+        }
+
+        private bool ValidateFieldValue(ContestantFieldType fieldType, string value)
+        {
+            return fieldType switch
+            {
+                ContestantFieldType.Text => true,
+                ContestantFieldType.Number => int.TryParse(value, out _),
+                ContestantFieldType.Date => DateTime.TryParse(value, out _),
+                ContestantFieldType.Time => TimeSpan.TryParse(value, out _),
+                ContestantFieldType.DateTime => DateTime.TryParse(value, out _),
+                ContestantFieldType.Image => IsValidImageUrl(value),
+                _ => false
+            };
+        }
+
+        private bool IsValidImageUrl(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return false;
+
+            return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
         }
     }
 }

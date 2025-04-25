@@ -6,18 +6,24 @@ using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Models.DTOs.Responses;
 using EpicShowdown.API.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EpicShowdown.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ContestController : ControllerBase
     {
         private readonly IContestService _contestService;
+        private readonly IContestantFieldService _fieldService;
 
-        public ContestController(IContestService contestService)
+        public ContestController(
+            IContestService contestService,
+            IContestantFieldService fieldService)
         {
             _contestService = contestService;
+            _fieldService = fieldService;
         }
 
         [HttpGet]
@@ -83,12 +89,96 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost("{code}/contestants")]
-        public async Task<ActionResult<ContestantResponse>> AddContestantToContest(Guid code, Contestant contestant)
+        public async Task<ActionResult<ContestantResponse>> AddContestantToContest(Guid code, CreateContestantRequest request)
         {
             try
             {
-                var addedContestant = await _contestService.AddContestantToContestAsync(code, contestant);
+                var addedContestant = await _contestService.AddContestantAsync(code, request);
                 return CreatedAtAction(nameof(GetContestantsByContestCode), new { code }, addedContestant);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPut("{code}/contestants/{contestantId}")]
+        public async Task<ActionResult<ContestantResponse>> UpdateContestant(Guid code, int contestantId, UpdateContestantRequest request)
+        {
+            try
+            {
+                var updatedContestant = await _contestService.UpdateContestantAsync(code, contestantId, request);
+                return Ok(updatedContestant);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpDelete("{code}/contestants/{contestantId}")]
+        public async Task<IActionResult> DeleteContestant(Guid code, int contestantId)
+        {
+            try
+            {
+                await _contestService.DeleteContestantAsync(code, contestantId);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpGet("{code}/fields")]
+        public async Task<ActionResult<IEnumerable<ContestantFieldResponse>>> GetFields(Guid code)
+        {
+            try
+            {
+                var fields = await _fieldService.GetAllByContestCodeAsync(code);
+                return Ok(fields);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPost("{code}/fields")]
+        public async Task<ActionResult<ContestantFieldResponse>> CreateField(Guid code, CreateContestantFieldRequest request)
+        {
+            try
+            {
+                var field = await _fieldService.CreateAsync(code, request);
+                return CreatedAtAction(nameof(GetFields), new { code }, field);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpPut("{code}/fields/{fieldId}")]
+        public async Task<ActionResult<ContestantFieldResponse>> UpdateField(Guid code, int fieldId, UpdateContestantFieldRequest request)
+        {
+            try
+            {
+                var field = await _fieldService.UpdateAsync(code, fieldId, request);
+                return Ok(field);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpDelete("{code}/fields/{fieldId}")]
+        public async Task<IActionResult> DeleteField(Guid code, int fieldId)
+        {
+            try
+            {
+                await _fieldService.DeleteAsync(code, fieldId);
+                return NoContent();
             }
             catch (ArgumentException ex)
             {

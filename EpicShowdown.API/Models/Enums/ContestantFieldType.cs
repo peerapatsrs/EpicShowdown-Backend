@@ -7,15 +7,6 @@ namespace EpicShowdown.API.Models.Enums
         Date,
         Time,
         DateTime,
-        Image,
-        Url,
-        Email,
-        Phone,
-        File,
-        Select,
-        MultiSelect,
-        Checkbox,
-        Radio,
-        TextArea
+        Image
     }
 }
