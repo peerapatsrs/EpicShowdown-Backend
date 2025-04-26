@@ -1,0 +1,135 @@
+---
+description: กฎและโครงสร้างของ EpicShowdown Backend สำหรับควบคุมรูปแบบการเขียนโค้ด และการจัดการโครงสร้างโปรเจค
+globs: 
+alwaysApply: false
+---
+@description
+Rules and structure for EpicShowdown Backend to control code style and project organization.
+
+@Instruction
+This document defines the project structure and coding guidelines for EpicShowdown Backend. Follow strictly.
+
+@Rule "Project Structure"
+- Controllers/ : Handle HTTP Requests
+- Models/ : Contains DTOs, Entities, Enums, Redis Models, and Service Models
+- Services/ : Business Logic
+- Repositories/ : Data access layer
+- Data/ : Entity Framework Core's ApplicationDbContext
+- Mappings/ : AutoMapper Profiles
+- Infrastructure/ : Authentication and Authorization systems
+
+@Rule "Main Files"
+- Program.cs : Application entry point
+- appsettings.json : Main configuration file
+- appsettings.Development.json : Development environment configuration
+- EpicShowdown.API.csproj : Project configuration file
+
+@Rule "System Workflow"
+1. Client → Controller
+2. Controller → Service
+3. Service → Repository
+4. Repository → Database
+5. Database → Repository → Service → Controller → Client
+
+@Rule "Technologies Used"
+- .NET 8
+- Entity Framework Core
+- AutoMapper
+- JWT Authentication
+- SQL Server
+- Redis
+
+@Rule "Coding Standards"
+- All names must be in English
+- Class names: PascalCase (e.g., `UserService`)
+- Method names: PascalCase (e.g., `GetUserProfile`)
+- Variable names: camelCase (e.g., `userName`)
+- XML Documentation required for all public methods
+- Hardcoding configs is forbidden. Use IConfiguration
+
+@Rule "Controller Guidelines"
+- Controllers must be lean, no business logic inside
+- All Endpoints must return a standardized ApiResponse
+- Use attributes like [Authorize] appropriately
+
+@Rule "Service Guidelines"
+- One file per Service Class
+- Service must not access the database directly; must go through Repository
+
+@Rule "Repository Guidelines"
+- Repository must be separated per Entity
+- Always use async/await
+- If a query needs more than 2-3 joins, move to View or Stored Procedure
+
+@Rule "Entity Guidelines"
+- Every Entity must inherit from `Entity<int>`
+- Must reside in Namespace `EpicShowdown.API.Models.Entities`
+
+@Example
+```csharp
+namespace EpicShowdown.API.Models.Entities
+{
+    public class Gift : Entity<int>
+    {
+        [Required]
+        [StringLength(100)]
+        public required string Name { get; set; }
+
+        [Required]
+        public required Guid Code { get; set; }
+
+        [StringLength(500)]
+        public string? Description { get; set; }
+
+        [Required]
+        public required string ImageUrl { get; set; }
+
+        public bool IsActive { get; set; } = true;
+    }
+}
+```
+
+@Rule "Redis Usage"
+- Only store Sessions or Cache in Redis
+- Do not use Redis as the primary database
+
+@Rule "Error Handling"
+- All Services and Repositories must handle Exceptions properly and return correct error responses to Controllers
+
+@Example
+```csharp
+// Correct
+public async Task<User> GetUserByIdAsync(Guid userId)
+{
+    var user = await _context.Users.FindAsync(userId);
+    if (user == null)
+    {
+        throw new NotFoundException($"User {userId} not found");
+    }
+    return user;
+}
+```
+
+@Rule "Interface and Implementations"
+- Interface and its Implementation must be in the same file
+- Interface name must start with `I` (e.g., `IUserService`)
+- Class name must match the Interface name without the `I` prefix (e.g., `UserService`)
+- Do not mix multiple Implementations in one file (unless absolutely necessary like Factory Pattern)
+
+@Example
+```csharp
+// EpicShowdown.Services/IUserService.cs
+
+public interface IUserService
+{
+    Task<UserDto> GetUserProfileAsync(Guid userId);
+}
+
+public class UserService : IUserService
+{
+    public async Task<UserDto> GetUserProfileAsync(Guid userId)
+    {
+        // Implementation
+    }
+}
+```

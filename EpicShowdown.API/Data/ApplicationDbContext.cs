@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Contestant> Contestants { get; set; }
     public DbSet<ContestantField> ContestantFields { get; set; }
     public DbSet<Gift> Gifts { get; set; }
+    public DbSet<ContestGift> ContestGifts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,18 @@ public class ApplicationDbContext : DbContext
             .HasMany(c => c.Fields)
             .WithOne(f => f.Contest)
             .HasForeignKey(f => f.ContestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Contest>()
+            .HasMany(c => c.ContestGifts)
+            .WithOne(cg => cg.Contest)
+            .HasForeignKey(cg => cg.ContestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Gift>()
+            .HasMany(g => g.ContestGifts)
+            .WithOne(cg => cg.Gift)
+            .HasForeignKey(cg => cg.GiftId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

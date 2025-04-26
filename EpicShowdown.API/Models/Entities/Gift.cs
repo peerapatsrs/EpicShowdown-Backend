@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using EpicShowdown.API.Data.Base;
 
@@ -21,5 +22,7 @@ namespace EpicShowdown.API.Models.Entities
         public required string ImageUrl { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public ICollection<ContestGift> ContestGifts { get; set; } = new List<ContestGift>();
     }
 }
