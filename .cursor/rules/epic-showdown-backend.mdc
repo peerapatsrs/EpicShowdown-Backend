@@ -6,7 +6,7 @@ alwaysApply: false
 @Rule "Project Structure"
 EpicShowdown.API/
     - Controllers/ : Handle HTTP Requests
-    - Models/ : Contains DTOs, Entities, Enums, Redis Models, and Service Models
+    - Models/ : Contains DTOs[Requests,Responses], Entities, Enums, Redis Models, and Service Models
     - Services/ : Business Logic
     - Repositories/ : Data access layer
     - Data/ : Entity Framework Core's ApplicationDbContext

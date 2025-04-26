@@ -1,5 +1,6 @@
 using AutoMapper;
-using EpicShowdown.API.Models.DTOs.DisplayTemplate;
+using EpicShowdown.API.Models.DTOs.Requests;
+using EpicShowdown.API.Models.DTOs.Responses;
 using EpicShowdown.API.Models.Entities;
 
 namespace EpicShowdown.API.Mappings

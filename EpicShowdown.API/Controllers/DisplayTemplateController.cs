@@ -1,6 +1,9 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EpicShowdown.API.Models.DTOs.DisplayTemplate;
+using EpicShowdown.API.Models.DTOs.Requests;
+using EpicShowdown.API.Models.DTOs.Responses;
 using EpicShowdown.API.Services;
 
 namespace EpicShowdown.API.Controllers
