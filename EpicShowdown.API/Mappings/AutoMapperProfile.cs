@@ -10,7 +10,9 @@ namespace EpicShowdown.API.Mappings
         public AutoMapperProfile()
         {
             // Contest Mappings
-            CreateMap<Contest, ContestResponse>();
+            CreateMap<Contest, ContestResponse>()
+                .ForMember(dest => dest.DisplayTemplateCode,
+                    opt => opt.MapFrom(src => src.DisplayTemplate != null ? src.DisplayTemplate.Code : (Guid?)null));
             CreateMap<CreateContestRequest, Contest>();
             CreateMap<UpdateContestRequest, Contest>();
 

@@ -14,6 +14,7 @@ namespace EpicShowdown.API.Models.DTOs.Responses
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public Guid? DisplayTemplateCode { get; set; }
         public ICollection<ContestantResponse> Contestants { get; set; } = new List<ContestantResponse>();
         public ICollection<ContestantFieldResponse> Fields { get; set; } = new List<ContestantFieldResponse>();
     }

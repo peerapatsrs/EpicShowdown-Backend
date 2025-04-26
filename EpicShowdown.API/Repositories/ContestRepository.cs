@@ -36,6 +36,7 @@ namespace EpicShowdown.API.Repositories
         {
             return await _context.Contests
                 .Include(c => c.Contestants)
+                .Include(c => c.DisplayTemplate)
                 .ToListAsync();
         }
 
@@ -43,6 +44,7 @@ namespace EpicShowdown.API.Repositories
         {
             return await _context.Contests
                 .Include(c => c.Contestants)
+                .Include(c => c.DisplayTemplate)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -50,6 +52,7 @@ namespace EpicShowdown.API.Repositories
         {
             return await _context.Contests
                 .Include(c => c.Contestants)
+                .Include(c => c.DisplayTemplate)
                 .FirstOrDefaultAsync(c => c.ContestCode == contestCode);
         }
 

@@ -32,6 +32,9 @@ namespace EpicShowdown.API.Models.Entities
         [Range(0, 100)]
         public decimal FeePercentage { get; set; } = 7.0m;
 
+        public int? DisplayTemplateId { get; set; }
+        public virtual DisplayTemplate? DisplayTemplate { get; set; }
+
         // Navigation properties
         public virtual ICollection<Contestant> Contestants { get; set; } = new List<Contestant>();
         public virtual ICollection<ContestantField> Fields { get; set; } = new List<ContestantField>();

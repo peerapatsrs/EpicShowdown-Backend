@@ -28,15 +28,18 @@ namespace EpicShowdown.API.Services
     {
         private readonly IContestRepository _contestRepository;
         private readonly IContestantFieldRepository _fieldRepository;
+        private readonly IDisplayTemplateRepository _displayTemplateRepository;
         private readonly IMapper _mapper;
 
         public ContestService(
             IContestRepository contestRepository,
             IContestantFieldRepository fieldRepository,
+            IDisplayTemplateRepository displayTemplateRepository,
             IMapper mapper)
         {
             _contestRepository = contestRepository;
             _fieldRepository = fieldRepository;
+            _displayTemplateRepository = displayTemplateRepository;
             _mapper = mapper;
         }
 
@@ -58,6 +61,16 @@ namespace EpicShowdown.API.Services
             contest.CreatedAt = DateTime.UtcNow;
             contest.IsActive = true;
 
+            if (request.DisplayTemplateCode.HasValue)
+            {
+                var displayTemplate = await _displayTemplateRepository.GetByCodeAsync(request.DisplayTemplateCode.Value);
+                if (displayTemplate == null)
+                {
+                    throw new ArgumentException($"Display template with code {request.DisplayTemplateCode} not found");
+                }
+                contest.DisplayTemplate = displayTemplate;
+            }
+
             var createdContest = await _contestRepository.CreateAsync(contest);
             return _mapper.Map<ContestResponse>(createdContest);
         }
@@ -70,6 +83,20 @@ namespace EpicShowdown.API.Services
 
             _mapper.Map(request, existingContest);
             existingContest.UpdatedAt = DateTime.UtcNow;
+
+            if (request.DisplayTemplateCode.HasValue)
+            {
+                var displayTemplate = await _displayTemplateRepository.GetByCodeAsync(request.DisplayTemplateCode.Value);
+                if (displayTemplate == null)
+                {
+                    throw new ArgumentException($"Display template with code {request.DisplayTemplateCode} not found");
+                }
+                existingContest.DisplayTemplate = displayTemplate;
+            }
+            else
+            {
+                existingContest.DisplayTemplate = null;
+            }
 
             var updatedContest = await _contestRepository.UpdateAsync(existingContest);
             return _mapper.Map<ContestResponse>(updatedContest);
@@ -127,20 +154,18 @@ namespace EpicShowdown.API.Services
             if (contestant == null)
                 throw new ArgumentException("Contestant not found");
 
-            if (request.FieldName != null)
-            {
-                var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
-                if (field == null)
-                    throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
+            var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
+            if (field == null)
+                throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
 
-                if (request.Value != null && !ValidateFieldValue(field.Type, request.Value))
-                    throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
-            }
+            if (!ValidateFieldValue(field.Type, request.Value))
+                throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
 
             _mapper.Map(request, contestant);
             contestant.UpdatedAt = DateTime.UtcNow;
 
             await _contestRepository.UpdateAsync(contest);
+
             return _mapper.Map<ContestantResponse>(contestant);
         }
 
@@ -158,26 +183,25 @@ namespace EpicShowdown.API.Services
             await _contestRepository.UpdateAsync(contest);
         }
 
-        private bool ValidateFieldValue(ContestantFieldType fieldType, string value)
+        private bool ValidateFieldValue(ContestantFieldType type, string value)
         {
-            return fieldType switch
+            switch (type)
             {
-                ContestantFieldType.Text => true,
-                ContestantFieldType.Number => int.TryParse(value, out _),
-                ContestantFieldType.Date => DateTime.TryParse(value, out _),
-                ContestantFieldType.Time => TimeSpan.TryParse(value, out _),
-                ContestantFieldType.DateTime => DateTime.TryParse(value, out _),
-                ContestantFieldType.Image => IsValidImageUrl(value),
-                _ => false
-            };
-        }
-
-        private bool IsValidImageUrl(string url)
-        {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return false;
-
-            return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+                case ContestantFieldType.Text:
+                    return true;
+                case ContestantFieldType.Number:
+                    return decimal.TryParse(value, out _);
+                case ContestantFieldType.Date:
+                    return DateTime.TryParse(value, out _);
+                case ContestantFieldType.Time:
+                    return TimeSpan.TryParse(value, out _);
+                case ContestantFieldType.DateTime:
+                    return DateTime.TryParse(value, out _);
+                case ContestantFieldType.Image:
+                    return Uri.TryCreate(value, UriKind.Absolute, out _);
+                default:
+                    return false;
+            }
         }
     }
 }

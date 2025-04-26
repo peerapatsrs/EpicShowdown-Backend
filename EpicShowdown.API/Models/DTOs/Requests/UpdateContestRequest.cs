@@ -19,5 +19,7 @@ namespace EpicShowdown.API.Models.DTOs.Requests
         public DateTime EndDate { get; set; }
 
         public bool IsActive { get; set; }
+
+        public Guid? DisplayTemplateCode { get; set; }
     }
 }
