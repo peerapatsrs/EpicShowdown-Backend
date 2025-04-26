@@ -29,6 +29,11 @@ namespace EpicShowdown.API.Mappings
             CreateMap<Gift, GiftResponse>();
             CreateMap<CreateGiftRequest, Gift>();
             CreateMap<UpdateGiftRequest, Gift>();
+
+            // DisplayTemplate Mappings
+            CreateMap<DisplayTemplate, DisplayTemplateResponse>();
+            CreateMap<CreateDisplayTemplateRequest, DisplayTemplate>();
+            CreateMap<UpdateDisplayTemplateRequest, DisplayTemplate>();
         }
     }
 }

@@ -14,8 +14,5 @@ namespace EpicShowdown.API.Models.DTOs.Requests
 
         [StringLength(500)]
         public string? Description { get; set; }
-
-        [Required]
-        public required string Content { get; set; }
     }
 }

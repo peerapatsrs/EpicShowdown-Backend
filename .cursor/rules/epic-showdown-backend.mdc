@@ -10,7 +10,7 @@ EpicShowdown.API/
     - Services/ : Business Logic
     - Repositories/ : Data access layer
     - Data/ : Entity Framework Core's ApplicationDbContext
-    - Mappings/ : AutoMapper Profiles
+    - Mappings/ : AutoMapper Profiles (all profiles must be defined in a single file)
     - Infrastructure/ : Authentication and Authorization systems
 
 @Rule "Main Files"
