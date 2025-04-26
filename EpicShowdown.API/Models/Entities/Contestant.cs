@@ -12,7 +12,7 @@ namespace EpicShowdown.API.Models.Entities
         public string FieldName { get; set; } = string.Empty;
 
         [Required]
-        [Column(TypeName = "nvarchar(max)")]
+        [Column(TypeName = "text")]
         public string Value { get; set; } = string.Empty;
 
         public int ContestId { get; set; }

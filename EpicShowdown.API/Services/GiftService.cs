@@ -43,11 +43,16 @@ namespace EpicShowdown.API.Services
 
         public async Task<GiftResponse> CreateGiftAsync(CreateGiftRequest giftRequest)
         {
-            var gift = _mapper.Map<Gift>(giftRequest);
-            gift.CreatedAt = DateTime.UtcNow;
-            gift.IsActive = true;
+            var gift = new Gift
+            {
+                Name = giftRequest.Name,
+                Description = giftRequest.Description,
+                Code = Guid.NewGuid(),
+                ImageUrl = giftRequest.ImageUrl
+            };
 
-            await _giftRepository.CreateAsync(gift);
+            await _giftRepository.AddAsync(gift);
+            await _giftRepository.SaveChangesAsync();
             return _mapper.Map<GiftResponse>(gift);
         }
 
@@ -61,6 +66,7 @@ namespace EpicShowdown.API.Services
             existingGift.UpdatedAt = DateTime.UtcNow;
 
             await _giftRepository.UpdateAsync(existingGift);
+            await _giftRepository.SaveChangesAsync();
             return _mapper.Map<GiftResponse>(existingGift);
         }
 
@@ -71,6 +77,7 @@ namespace EpicShowdown.API.Services
                 return false;
 
             await _giftRepository.DeleteAsync(gift);
+            await _giftRepository.SaveChangesAsync();
             return true;
         }
     }

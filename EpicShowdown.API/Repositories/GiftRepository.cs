@@ -10,7 +10,6 @@ namespace EpicShowdown.API.Repositories
     public interface IGiftRepository : IRepositoryBase<Gift>
     {
         Task<bool> ExistsAsync(int id);
-        Task<Gift> CreateAsync(Gift gift);
         Task<Gift?> GetByCodeAsync(string code);
     }
 
@@ -25,16 +24,12 @@ namespace EpicShowdown.API.Repositories
             return await _dbSet.AnyAsync(e => e.Id == id);
         }
 
-        public async Task<Gift> CreateAsync(Gift gift)
-        {
-            await _dbSet.AddAsync(gift);
-            await _context.SaveChangesAsync();
-            return gift;
-        }
-
         public async Task<Gift?> GetByCodeAsync(string code)
         {
-            return await _dbSet.FirstOrDefaultAsync(e => e.Code == code);
+            if (!Guid.TryParse(code, out var parsedCode))
+                return null;
+
+            return await _dbSet.FirstOrDefaultAsync(g => g.Code == parsedCode);
         }
     }
 }

@@ -11,9 +11,6 @@ namespace EpicShowdown.API.Models.DTOs.Requests
         public required string Description { get; set; }
 
         [Required]
-        public required string Code { get; set; }
-
-        [Required]
-        public int Points { get; set; }
+        public required string ImageUrl { get; set; }
     }
 }

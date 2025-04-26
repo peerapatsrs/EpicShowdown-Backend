@@ -24,6 +24,11 @@ namespace EpicShowdown.API.Mappings
             CreateMap<ContestantField, ContestantFieldResponse>();
             CreateMap<CreateContestantFieldRequest, ContestantField>();
             CreateMap<UpdateContestantFieldRequest, ContestantField>();
+
+            // Gift Mappings
+            CreateMap<Gift, GiftResponse>();
+            CreateMap<CreateGiftRequest, Gift>();
+            CreateMap<UpdateGiftRequest, Gift>();
         }
     }
 }

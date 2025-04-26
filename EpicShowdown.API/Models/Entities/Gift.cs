@@ -12,18 +12,13 @@ namespace EpicShowdown.API.Models.Entities
 
         [Required]
         [StringLength(50)]
-        public required string Code { get; set; }
-
-        [Required]
-        public decimal PricePerPiece { get; set; }
+        public required Guid Code { get; set; }
 
         [StringLength(500)]
         public string? Description { get; set; }
 
         [Required]
         public required string ImageUrl { get; set; }
-
-        public int StockQuantity { get; set; }
 
         public bool IsActive { get; set; } = true;
     }

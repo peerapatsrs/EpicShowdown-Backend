@@ -10,7 +10,6 @@ namespace EpicShowdown.API.Models.DTOs.Requests
         [Required]
         public required string Description { get; set; }
 
-        [Required]
-        public int Points { get; set; }
+        public bool IsActive { get; set; }
     }
 }
