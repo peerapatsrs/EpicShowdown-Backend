@@ -51,7 +51,7 @@ namespace EpicShowdown.API.Controllers
             var result = await _service.DeleteAsync(code);
             if (!result)
             {
-                return NotFound("Display template with code {code} not found");
+                return NotFound($"Display template with code {code} not found");
             }
 
             return Ok(true);

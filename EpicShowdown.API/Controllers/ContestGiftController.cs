@@ -22,7 +22,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ContestGiftResponse>>> GetContestGifts(Guid contestCode)
+        public async Task<IActionResult> GetContestGifts(Guid contestCode)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet("{giftCode}")]
-        public async Task<ActionResult<ContestGiftResponse>> GetContestGift(Guid contestCode, Guid giftCode)
+        public async Task<IActionResult> GetContestGift(Guid contestCode, Guid giftCode)
         {
             try
             {
@@ -50,7 +50,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ContestGiftResponse>> CreateContestGift(Guid contestCode, CreateContestGiftRequest request)
+        public async Task<IActionResult> CreateContestGift(Guid contestCode, CreateContestGiftRequest request)
         {
             try
             {
@@ -64,7 +64,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPut("{giftCode}")]
-        public async Task<ActionResult<ContestGiftResponse>> UpdateContestGift(Guid contestCode, Guid giftCode, UpdateContestGiftRequest request)
+        public async Task<IActionResult> UpdateContestGift(Guid contestCode, Guid giftCode, UpdateContestGiftRequest request)
         {
             try
             {

@@ -27,14 +27,14 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ContestResponse>>> GetAllContests()
+        public async Task<IActionResult> GetAllContests()
         {
             var contests = await _contestService.GetAllContestsAsync();
             return Ok(contests);
         }
 
         [HttpGet("{code}")]
-        public async Task<ActionResult<ContestResponse>> GetContestByCode(Guid code)
+        public async Task<IActionResult> GetContestByCode(Guid code)
         {
             var contest = await _contestService.GetContestByCodeAsync(code);
             if (contest == null)
@@ -44,7 +44,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ContestResponse>> CreateContest(CreateContestRequest request)
+        public async Task<IActionResult> CreateContest(CreateContestRequest request)
         {
             var createdContest = await _contestService.CreateContestAsync(request);
             return CreatedAtAction(nameof(GetContestByCode), new { code = createdContest.ContestCode }, createdContest);
@@ -75,7 +75,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet("{code}/contestants")]
-        public async Task<ActionResult<IEnumerable<ContestantResponse>>> GetContestantsByContestCode(Guid code)
+        public async Task<IActionResult> GetContestantsByContestCode(Guid code)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost("{code}/contestants")]
-        public async Task<ActionResult<ContestantResponse>> AddContestantToContest(Guid code, CreateContestantRequest request)
+        public async Task<IActionResult> AddContestantToContest(Guid code, CreateContestantRequest request)
         {
             try
             {
@@ -103,7 +103,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPut("{code}/contestants/{contestantId}")]
-        public async Task<ActionResult<ContestantResponse>> UpdateContestant(Guid code, int contestantId, UpdateContestantRequest request)
+        public async Task<IActionResult> UpdateContestant(Guid code, int contestantId, UpdateContestantRequest request)
         {
             try
             {
@@ -131,7 +131,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet("{code}/fields")]
-        public async Task<ActionResult<IEnumerable<ContestantFieldResponse>>> GetFields(Guid code)
+        public async Task<IActionResult> GetFields(Guid code)
         {
             try
             {
@@ -145,7 +145,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost("{code}/fields")]
-        public async Task<ActionResult<ContestantFieldResponse>> CreateField(Guid code, CreateContestantFieldRequest request)
+        public async Task<IActionResult> CreateField(Guid code, CreateContestantFieldRequest request)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPut("{code}/fields/{fieldId}")]
-        public async Task<ActionResult<ContestantFieldResponse>> UpdateField(Guid code, int fieldId, UpdateContestantFieldRequest request)
+        public async Task<IActionResult> UpdateField(Guid code, int fieldId, UpdateContestantFieldRequest request)
         {
             try
             {

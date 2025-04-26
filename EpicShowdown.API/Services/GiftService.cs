@@ -12,10 +12,10 @@ namespace EpicShowdown.API.Services
     public interface IGiftService
     {
         Task<IEnumerable<GiftResponse>> GetAllGiftsAsync();
-        Task<GiftResponse?> GetGiftByCodeAsync(string code);
+        Task<GiftResponse?> GetGiftByCodeAsync(Guid code);
         Task<GiftResponse> CreateGiftAsync(CreateGiftRequest giftRequest);
-        Task<GiftResponse?> UpdateGiftAsync(string code, UpdateGiftRequest giftRequest);
-        Task<bool> DeleteGiftAsync(string code);
+        Task<GiftResponse?> UpdateGiftAsync(Guid code, UpdateGiftRequest giftRequest);
+        Task<bool> DeleteGiftAsync(Guid code);
     }
 
     public class GiftService : IGiftService
@@ -35,7 +35,7 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<IEnumerable<GiftResponse>>(gifts);
         }
 
-        public async Task<GiftResponse?> GetGiftByCodeAsync(string code)
+        public async Task<GiftResponse?> GetGiftByCodeAsync(Guid code)
         {
             var gift = await _giftRepository.GetByCodeAsync(code);
             return gift == null ? null : _mapper.Map<GiftResponse>(gift);
@@ -57,7 +57,7 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<GiftResponse>(gift);
         }
 
-        public async Task<GiftResponse?> UpdateGiftAsync(string code, UpdateGiftRequest giftRequest)
+        public async Task<GiftResponse?> UpdateGiftAsync(Guid code, UpdateGiftRequest giftRequest)
         {
             var existingGift = await _giftRepository.GetByCodeAsync(code);
             if (existingGift == null)
@@ -71,7 +71,7 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<GiftResponse>(existingGift);
         }
 
-        public async Task<bool> DeleteGiftAsync(string code)
+        public async Task<bool> DeleteGiftAsync(Guid code)
         {
             var gift = await _giftRepository.GetByCodeAsync(code);
             if (gift == null)

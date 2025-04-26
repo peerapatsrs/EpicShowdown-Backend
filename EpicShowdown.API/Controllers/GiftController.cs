@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -21,14 +22,14 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GiftResponse>>> GetAllGifts()
+        public async Task<IActionResult> GetAllGifts()
         {
             var gifts = await _giftService.GetAllGiftsAsync();
             return Ok(gifts);
         }
 
         [HttpGet("{code}")]
-        public async Task<ActionResult<GiftResponse>> GetGiftByCode(string code)
+        public async Task<IActionResult> GetGiftByCode(Guid code)
         {
             var gift = await _giftService.GetGiftByCodeAsync(code);
             if (gift == null)
@@ -38,14 +39,14 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GiftResponse>> CreateGift(CreateGiftRequest giftRequest)
+        public async Task<IActionResult> CreateGift(CreateGiftRequest giftRequest)
         {
             var createdGift = await _giftService.CreateGiftAsync(giftRequest);
             return CreatedAtAction(nameof(GetGiftByCode), new { code = createdGift.Code }, createdGift);
         }
 
         [HttpPut("{code}")]
-        public async Task<ActionResult<GiftResponse>> UpdateGift(string code, UpdateGiftRequest giftRequest)
+        public async Task<IActionResult> UpdateGift(Guid code, UpdateGiftRequest giftRequest)
         {
             var updatedGift = await _giftService.UpdateGiftAsync(code, giftRequest);
             if (updatedGift == null)
@@ -55,7 +56,7 @@ namespace EpicShowdown.API.Controllers
         }
 
         [HttpDelete("{code}")]
-        public async Task<ActionResult> DeleteGift(string code)
+        public async Task<IActionResult> DeleteGift(Guid code)
         {
             var result = await _giftService.DeleteGiftAsync(code);
             if (!result)
