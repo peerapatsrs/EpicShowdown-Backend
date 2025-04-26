@@ -16,6 +16,7 @@ using EpicShowdown.API.Models;
 using EpicShowdown.API.Repositories;
 using EpicShowdown.API.Services;
 using AutoMapper;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userService = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+                var userCode = context.Principal?.FindFirst("UserCode")?.Value;
+
+                if (string.IsNullOrEmpty(userCode) || !Guid.TryParse(userCode, out Guid userGuid))
+                {
+                    context.Fail("Invalid token");
+                    return;
+                }
+
+                var user = await userService.GetByUserCodeAsync(userGuid);
+                if (user == null)
+                {
+                    context.Fail("User not found");
+                    return;
+                }
+
+                var identity = context.Principal?.Identity as ClaimsIdentity;
+                if (identity != null)
+                {
+                    // เพิ่ม Role เข้าไปใน Claims
+                    var roleClaim = identity.FindFirst("UserRole");
+                    if (roleClaim != null)
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, roleClaim.Value));
+                    }
+                }
+            }
+        };
     });
 
 // Configure Database
@@ -74,11 +108,13 @@ builder.Services.AddDbContext<EpicShowdown.API.Data.ApplicationDbContext>(option
 
 // Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IGiftRepository, GiftRepository>();
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IGiftService, GiftService>();
 builder.Services.AddHttpContextAccessor();
 
 // Register Infrastructure Services
@@ -131,11 +167,6 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 });
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
 
 // Add Hangfire Authorization Filter
 public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
