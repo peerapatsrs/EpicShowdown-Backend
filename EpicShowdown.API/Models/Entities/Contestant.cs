@@ -9,14 +9,17 @@ namespace EpicShowdown.API.Models.Entities
     {
         [Required]
         [StringLength(100)]
-        public string FieldName { get; set; } = string.Empty;
+        public required string FieldName { get; set; }
 
         [Required]
         [Column(TypeName = "text")]
-        public string Value { get; set; } = string.Empty;
+        public required string Value { get; set; }
 
-        public int ContestId { get; set; }
+        [Required]
+        public required int ContestId { get; set; }
+
+        [Required]
         [ForeignKey("ContestId")]
-        public virtual Contest Contest { get; set; } = null!;
+        public required virtual Contest Contest { get; set; }
     }
 }

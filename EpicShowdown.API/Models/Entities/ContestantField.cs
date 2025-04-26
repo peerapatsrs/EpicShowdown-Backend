@@ -9,23 +9,29 @@ namespace EpicShowdown.API.Models.Entities
     {
         [Required]
         [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
-
-        [StringLength(500)]
-        public string Description { get; set; } = string.Empty;
+        public required string Name { get; set; }
 
         [Required]
-        public ContestantFieldType Type { get; set; }
+        [StringLength(500)]
+        public required string Description { get; set; }
 
-        public bool IsRequired { get; set; }
+        [Required]
+        public required ContestantFieldType Type { get; set; }
+
+        [Required]
+        public required bool IsRequired { get; set; }
 
         public string? DefaultValue { get; set; }
 
         public string? ValidationRules { get; set; }
 
-        public int Order { get; set; }
+        [Required]
+        public required int Order { get; set; }
 
-        public int ContestId { get; set; }
-        public virtual Contest Contest { get; set; } = null!;
+        [Required]
+        public required int ContestId { get; set; }
+
+        [Required]
+        public required virtual Contest Contest { get; set; }
     }
 }

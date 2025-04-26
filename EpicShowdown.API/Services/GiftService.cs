@@ -48,7 +48,8 @@ namespace EpicShowdown.API.Services
                 Name = giftRequest.Name,
                 Description = giftRequest.Description,
                 Code = Guid.NewGuid(),
-                ImageUrl = giftRequest.ImageUrl
+                ImageUrl = giftRequest.ImageUrl,
+                IsActive = true
             };
 
             await _giftRepository.AddAsync(gift);

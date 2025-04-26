@@ -12,7 +12,6 @@ namespace EpicShowdown.API.Models.Entities
         public required string Name { get; set; }
 
         [Required]
-        [StringLength(50)]
         public required Guid Code { get; set; }
 
         [StringLength(500)]
@@ -21,7 +20,8 @@ namespace EpicShowdown.API.Models.Entities
         [Required]
         public required string ImageUrl { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        [Required]
+        public required bool IsActive { get; set; } = true;
 
         public ICollection<ContestGift> ContestGifts { get; set; } = new List<ContestGift>();
     }
