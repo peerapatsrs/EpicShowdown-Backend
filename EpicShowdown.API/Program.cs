@@ -19,6 +19,7 @@ using AutoMapper;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Fido2NetLib;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,6 +138,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGiftRepository, GiftRepository>();
+builder.Services.AddScoped<IPassKeyRepository, PassKeyRepository>();
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -172,6 +174,27 @@ builder.Services.AddHangfireServer();
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+builder.Services.AddScoped<IPassKeyService, PassKeyService>();
+builder.Services.AddFido2(options =>
+{
+    options.ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost";
+    options.ServerName = builder.Configuration["Fido2:ServerName"] ?? "EpicShowdown";
+    var originsConfig = builder.Configuration.GetSection("Fido2:Origins").Get<string[]>();
+    options.Origins = new HashSet<string>(originsConfig ?? new string[] { "https://localhost:8000", "https://localhost:3000" });
+    options.TimestampDriftTolerance = Convert.ToInt32(builder.Configuration["Fido2:TimestampDriftTolerance"] ?? "300000");
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("https://localhost:3000")
+              .AllowCredentials()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // กำหนดให้ใช้ UTC เป็นค่าเริ่มต้นสำหรับ DateTime ในแอปพลิเคชัน
@@ -196,6 +219,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new HangfireAuthorizationFilter(app.Configuration) }
 });
+app.UseCors("AllowFrontend");
 
 app.Run();
 

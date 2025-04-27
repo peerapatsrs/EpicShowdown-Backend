@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Gift> Gifts { get; set; }
     public DbSet<ContestGift> ContestGifts { get; set; }
     public DbSet<ContestantGift> ContestantGifts { get; set; }
+    public DbSet<PassKey> PassKeys { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,5 +49,9 @@ public class ApplicationDbContext : DbContext
             .WithOne(cg => cg.Gift)
             .HasForeignKey(cg => cg.GiftId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PassKey>()
+            .HasIndex(p => p.CredentialId)
+            .IsUnique();
     }
 }

@@ -9,7 +9,6 @@ namespace EpicShowdown.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Route("api/contests/{contestCode}/contestants/{contestantId}/gifts")]
     [AllowAnonymous]
     public class ContestantGiftController : ControllerBase
     {
@@ -38,7 +37,7 @@ namespace EpicShowdown.API.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("{contestCode}/{contestantId}")]
         public async Task<IActionResult> GetGifts(Guid contestCode, int contestantId)
         {
             try
