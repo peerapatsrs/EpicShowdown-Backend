@@ -18,6 +18,10 @@ namespace EpicShowdown.API.Models.DTOs.Requests
         [Required]
         public DateTime EndDate { get; set; }
 
+        public DateTime? GiftStartDate { get; set; }
+
+        public DateTime? GiftEndDate { get; set; }
+
         public bool IsActive { get; set; }
 
         public Guid? DisplayTemplateCode { get; set; }

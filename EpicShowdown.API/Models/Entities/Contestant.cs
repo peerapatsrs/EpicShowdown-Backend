@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using EpicShowdown.API.Data.Base;
@@ -21,5 +22,8 @@ namespace EpicShowdown.API.Models.Entities
         [Required]
         [ForeignKey("ContestId")]
         public required virtual Contest Contest { get; set; }
+
+        // Navigation property for received gifts
+        public virtual ICollection<ContestantGift> ReceivedGifts { get; set; } = new List<ContestantGift>();
     }
 }

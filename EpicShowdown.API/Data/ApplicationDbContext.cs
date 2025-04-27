@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ContestantField> ContestantFields { get; set; }
     public DbSet<Gift> Gifts { get; set; }
     public DbSet<ContestGift> ContestGifts { get; set; }
+    public DbSet<ContestantGift> ContestantGifts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

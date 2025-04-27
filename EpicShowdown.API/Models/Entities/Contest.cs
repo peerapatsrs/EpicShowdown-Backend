@@ -24,6 +24,10 @@ namespace EpicShowdown.API.Models.Entities
         [Required]
         public required DateTime EndDate { get; set; }
 
+        public DateTime? GiftStartDate { get; set; }
+
+        public DateTime? GiftEndDate { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public required User CreatedBy { get; set; }

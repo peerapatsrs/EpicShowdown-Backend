@@ -116,6 +116,17 @@ namespace EpicShowdown.API.Models.Entities
 }
 ```
 
+@Rule "Date and Time Standard"
+- All system timestamps must use `DateTime.UtcNow`
+- Never use `DateTime.Now` for backend systems
+- Utc time is required for consistent storage, especially for multi-region compatibility
+
+@Example
+```csharp
+var createdAt = DateTime.UtcNow;
+var updatedAt = DateTime.UtcNow;
+```
+
 @Rule "Redis Usage"
 - Only store Sessions or Cache in Redis
 - Do not use Redis as the primary database

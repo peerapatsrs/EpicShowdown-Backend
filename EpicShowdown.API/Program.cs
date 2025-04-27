@@ -17,17 +17,40 @@ using EpicShowdown.API.Repositories;
 using EpicShowdown.API.Services;
 using AutoMapper;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
+// Configure DateTime to use UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
 
-// Configure Swagger
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // กำหนดให้ JSON Serializer ใช้ UTC DateTime เป็นค่าเริ่มต้น
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
+// Configure Swagger with DateTime format
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "EpicShowdown API", Version = "v1" });
+
+    // กำหนด format สำหรับ DateTime ใน Swagger
+    c.MapType<DateTime>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "date-time",
+        Description = "UTC DateTime"
+    });
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme",
@@ -102,9 +125,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configure Database
-builder.Services.AddDbContext<EpicShowdown.API.Data.ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("DefaultConnection is not configured")));
+// Configure Database with UTC DateTime
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("DefaultConnection is not configured")
+    );
+});
 
 // Register Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -145,6 +173,9 @@ builder.Services.AddHangfireServer();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
 var app = builder.Build();
+
+// กำหนดให้ใช้ UTC เป็นค่าเริ่มต้นสำหรับ DateTime ในแอปพลิเคชัน
+AppContext.SetSwitch("System.Globalization.UseUtcDateTime", true);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

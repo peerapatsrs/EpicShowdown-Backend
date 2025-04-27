@@ -22,6 +22,13 @@ namespace EpicShowdown.API.Mappings
             CreateMap<CreateContestantRequest, Contestant>();
             CreateMap<UpdateContestantRequest, Contestant>();
 
+            // ContestantGift Mappings
+            CreateMap<ContestantGift, ContestantGiftResponse>()
+                .ForMember(dest => dest.GiftName, opt => opt.MapFrom(src => src.ContestGift.Gift.Name))
+                .ForMember(dest => dest.GiftPrice, opt => opt.MapFrom(src => src.ContestGift.Price))
+                .ForMember(dest => dest.GiftPoints, opt => opt.MapFrom(src => src.ContestGift.Points))
+                .ForMember(dest => dest.GivenByName, opt => opt.MapFrom(src => src.GivenBy != null ? $"{src.GivenBy.FirstName} {src.GivenBy.LastName}" : string.Empty));
+
             // ContestantField Mappings
             CreateMap<ContestantField, ContestantFieldResponse>();
             CreateMap<CreateContestantFieldRequest, ContestantField>();

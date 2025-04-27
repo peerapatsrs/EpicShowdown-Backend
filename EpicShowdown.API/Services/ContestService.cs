@@ -22,6 +22,8 @@ namespace EpicShowdown.API.Services
         Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request);
         Task<ContestantResponse> UpdateContestantAsync(Guid contestCode, int contestantId, UpdateContestantRequest request);
         Task DeleteContestantAsync(Guid contestCode, int contestantId);
+        Task<ContestantGiftResponse> GiveGiftToContestantAsync(Guid contestCode, int contestantId, GiveGiftRequest request);
+        Task<IEnumerable<ContestantGiftResponse>> GetContestantGiftsAsync(Guid contestCode, int contestantId);
     }
 
     public class ContestService : IContestService
@@ -29,17 +31,23 @@ namespace EpicShowdown.API.Services
         private readonly IContestRepository _contestRepository;
         private readonly IContestantFieldRepository _fieldRepository;
         private readonly IDisplayTemplateRepository _displayTemplateRepository;
+        private readonly IContestantGiftRepository _contestantGiftRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public ContestService(
             IContestRepository contestRepository,
             IContestantFieldRepository fieldRepository,
             IDisplayTemplateRepository displayTemplateRepository,
+            IContestantGiftRepository contestantGiftRepository,
+            ICurrentUserService currentUserService,
             IMapper mapper)
         {
             _contestRepository = contestRepository;
             _fieldRepository = fieldRepository;
             _displayTemplateRepository = displayTemplateRepository;
+            _contestantGiftRepository = contestantGiftRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
@@ -202,6 +210,55 @@ namespace EpicShowdown.API.Services
                 default:
                     return false;
             }
+        }
+
+        public async Task<ContestantGiftResponse> GiveGiftToContestantAsync(Guid contestCode, int contestantId, GiveGiftRequest request)
+        {
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
+            if (contest == null)
+                throw new ArgumentException("Contest not found");
+
+            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            if (contestant == null)
+                throw new ArgumentException("Contestant not found");
+
+            var contestGift = contest.ContestGifts.FirstOrDefault(g => g.Gift.Code == request.GiftCode);
+            if (contestGift == null)
+                throw new ArgumentException("Gift not found in this contest");
+
+            // ตรวจสอบว่าสามารถส่งของขวัญได้หรือไม่
+            var (canGiveGift, errorMessage) = ContestantGift.CanGiveGift(contest);
+            if (!canGiveGift)
+                throw new InvalidOperationException(errorMessage);
+
+            // Try to get current user if logged in
+            var currentUser = await _currentUserService.GetCurrentUser();
+
+            var contestantGift = new ContestantGift
+            {
+                Contestant = contestant,
+                ContestGift = contestGift,
+                GivenBy = currentUser, // This can be null now
+                GivenAt = DateTime.UtcNow,
+                Message = request.Message
+            };
+
+            var createdGift = await _contestantGiftRepository.CreateAsync(contestantGift);
+            return _mapper.Map<ContestantGiftResponse>(createdGift);
+        }
+
+        public async Task<IEnumerable<ContestantGiftResponse>> GetContestantGiftsAsync(Guid contestCode, int contestantId)
+        {
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
+            if (contest == null)
+                throw new ArgumentException("Contest not found");
+
+            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            if (contestant == null)
+                throw new ArgumentException("Contestant not found");
+
+            var gifts = await _contestantGiftRepository.GetByContestantIdAsync(contestantId);
+            return _mapper.Map<IEnumerable<ContestantGiftResponse>>(gifts);
         }
     }
 }
