@@ -22,9 +22,6 @@ public class PassKeyAuthenticationRequest
     [JsonPropertyName("userHandle")]
     public string UserHandle { get; set; } = string.Empty;
 
-    [JsonPropertyName("response")]
-    public string Response { get; set; } = string.Empty;
-
     [JsonPropertyName("options")]
     public string Options { get; set; } = string.Empty;
 }

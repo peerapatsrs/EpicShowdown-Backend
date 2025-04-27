@@ -128,15 +128,10 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> GetPassKeyRegistrationOptions()
     {
         var user = await _currentUserService.GetCurrentUser();
-        var userCode = user?.UserCode;
-        var email = user?.Email;
+        if (user == null)
+            return Unauthorized(new { message = "User not found" });
 
-        if (userCode == null || email == null)
-        {
-            return BadRequest(new { message = "User information not found" });
-        }
-
-        var options = await _passKeyService.GenerateRegistrationOptionsAsync(userCode.Value, email);
+        var options = await _passKeyService.GenerateRegistrationOptionsAsync(user.UserCode, user.Email);
         return Ok(new { options });
     }
 
@@ -145,50 +140,32 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> VerifyPassKeyRegistration([FromBody] PassKeyRegistrationRequest request)
     {
         var user = await _currentUserService.GetCurrentUser();
-        var userCode = user?.UserCode;
-        if (userCode == null)
-        {
-            return BadRequest(new { message = "User information not found" });
-        }
-
-        var result = await _passKeyService.VerifyRegistrationAsync(userCode.Value, request);
-        if (!result)
-        {
-            return BadRequest(new { message = "PassKey registration failed" });
-        }
-
+        var result = await _passKeyService.VerifyRegistrationAsync(user?.UserCode ?? Guid.Empty, request);
+        if (!result) return BadRequest(new { message = "PassKey registration failed" });
         return Ok(new { message = "PassKey registered successfully" });
     }
 
+    // อัพเดท endpoint ให้เรียกเมธอด async ใหม่
     [HttpPost("passkey/authenticate/options")]
-    public async Task<IActionResult> GetPassKeyAuthenticationOptions([FromBody] string credentialId)
+    public async Task<IActionResult> GetPassKeyAuthenticationOptions()
     {
-        var options = await _passKeyService.GenerateAuthenticationOptionsAsync(credentialId);
+        var options = await _passKeyService.GenerateAuthenticationOptionsAsync();
         return Ok(new { options });
     }
 
     [HttpPost("passkey/authenticate")]
     public async Task<IActionResult> AuthenticateWithPassKey([FromBody] PassKeyAuthenticationRequest request)
     {
-        var verifyAuthenticationRequest = await _passKeyService.VerifyAuthenticationAsync(request);
-        if (!verifyAuthenticationRequest.Success)
-        {
+        var authResult = await _passKeyService.VerifyAuthenticationAsync(request);
+        if (!authResult.Success || authResult.User?.Email == null)
             return Unauthorized(new { message = "PassKey authentication failed" });
-        }
 
-        var user = await _userRepository.GetByEmailAsync(verifyAuthenticationRequest?.User?.Email ?? string.Empty);
+        var user = await _userRepository.GetByEmailAsync(authResult.User.Email);
         if (user == null)
-        {
             return Unauthorized(new { message = "User not found" });
-        }
 
         var (accessToken, refreshToken) = await GenerateTokensAsync(user);
-
-        return Ok(new LoginResponse
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken.Token
-        });
+        return Ok(new LoginResponse { AccessToken = accessToken, RefreshToken = refreshToken.Token });
     }
 
     [HttpDelete("passkey/{passKeyId}")]
@@ -196,18 +173,11 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> RevokePassKey(string passKeyId)
     {
         var user = await _currentUserService.GetCurrentUser();
-        var userCode = user?.UserCode;
-        if (userCode == null)
-        {
-            return BadRequest(new { message = "User information not found" });
-        }
+        if (user == null)
+            return Unauthorized(new { message = "User not found" });
 
-        var result = await _passKeyService.RevokePassKeyAsync(userCode.Value, passKeyId);
-        if (!result)
-        {
-            return BadRequest(new { message = "Failed to revoke PassKey" });
-        }
-
+        var result = await _passKeyService.RevokePassKeyAsync(user.UserCode, passKeyId);
+        if (!result) return BadRequest(new { message = "Failed to revoke PassKey" });
         return Ok(new { message = "PassKey revoked successfully" });
     }
 

@@ -6,15 +6,14 @@ using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Repositories;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
-using Microsoft.Extensions.Options;
 
 namespace EpicShowdown.API.Services;
 
 public interface IPassKeyService
 {
-    Task<string> GenerateRegistrationOptionsAsync(Guid userId, string username);
-    Task<bool> VerifyRegistrationAsync(Guid userId, PassKeyRegistrationRequest request);
-    Task<string> GenerateAuthenticationOptionsAsync(string credentialId);
+    Task<string> GenerateRegistrationOptionsAsync(Guid userCode, string username);
+    Task<bool> VerifyRegistrationAsync(Guid userCode, PassKeyRegistrationRequest request);
+    Task<string> GenerateAuthenticationOptionsAsync();
     Task<PassKeyAuthenticationResponse> VerifyAuthenticationAsync(PassKeyAuthenticationRequest request);
     Task<bool> RevokePassKeyAsync(Guid userCode, string passKeyId);
 }
@@ -38,7 +37,7 @@ public class PassKeyService : IPassKeyService
         _userRepository = userRepository;
     }
 
-    public async Task<string> GenerateRegistrationOptionsAsync(Guid userId, string username)
+    public async Task<string> GenerateRegistrationOptionsAsync(Guid userCode, string username)
     {
         try
         {
@@ -46,15 +45,26 @@ public class PassKeyService : IPassKeyService
             {
                 DisplayName = username,
                 Name = username,
-                Id = Encoding.UTF8.GetBytes(userId.ToString())
+                Id = Encoding.UTF8.GetBytes(userCode.ToString())
             };
 
-            var existingKeys = (await _passKeyRepository.GetByUserCodeAsync(userId))
+            var existingKeys = (await _passKeyRepository.GetByUserCodeAsync(userCode))
                 .Select(pk => new PublicKeyCredentialDescriptor(Convert.FromBase64String(pk.CredentialId)))
                 .ToList();
 
-            var options = _fido2.RequestNewCredential(user, existingKeys, AuthenticatorSelection.Default, AttestationConveyancePreference.None);
+            var authenticatorSelection = new AuthenticatorSelection
+            {
+                ResidentKey = ResidentKeyRequirement.Required,
+                UserVerification = UserVerificationRequirement.Required
+            };
 
+            var options = _fido2.RequestNewCredential(new RequestNewCredentialParams
+            {
+                User = user,
+                ExcludeCredentials = existingKeys,
+                AuthenticatorSelection = authenticatorSelection,
+                AttestationPreference = AttestationConveyancePreference.None
+            });
             return JsonSerializer.Serialize(options);
         }
         catch (Exception ex)
@@ -64,14 +74,14 @@ public class PassKeyService : IPassKeyService
         }
     }
 
-    public async Task<bool> VerifyRegistrationAsync(Guid userId, PassKeyRegistrationRequest request)
+    public async Task<bool> VerifyRegistrationAsync(Guid userCode, PassKeyRegistrationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Options, nameof(request.Options));
 
         try
         {
-            _logger.LogInformation("Starting registration verification for user {UserId}", userId);
+            _logger.LogInformation("Starting registration verification for user {UserId}", userCode);
             _logger.LogDebug("Raw request data: Id={Id}, RawId={RawId}, AttestationObject={AttestationObject}, ClientDataJSON={ClientDataJSON}",
                 request.Id, request.RawId, request.AttestationObject, request.ClientDataJSON);
 
@@ -102,9 +112,11 @@ public class PassKeyService : IPassKeyService
                 Id = SafeFromBase64UrlString(request.Id, nameof(request.Id)),
                 RawId = SafeFromBase64UrlString(request.RawId, nameof(request.RawId)),
                 Type = PublicKeyCredentialType.PublicKey,
-                Response = new AuthenticatorAttestationRawResponse.ResponseData
+
+                Response = new AuthenticatorAttestationRawResponse.AttestationResponse
                 {
                     AttestationObject = SafeFromBase64UrlString(request.AttestationObject, nameof(request.AttestationObject)),
+                    // ตรงนี้เปลี่ยนเป็น ClientDataJson
                     ClientDataJson = SafeFromBase64UrlString(request.ClientDataJSON, nameof(request.ClientDataJSON))
                 }
             };
@@ -114,7 +126,7 @@ public class PassKeyService : IPassKeyService
             var storedOptions = JsonSerializer.Deserialize<CredentialCreateOptions>(request.Options);
             if (storedOptions == null)
             {
-                _logger.LogError("Options deserialized to null for user {UserId}", userId);
+                _logger.LogError("Options deserialized to null for user {UserId}", userCode);
                 throw new ArgumentException("Options data deserialized to null", nameof(request));
             }
 
@@ -123,57 +135,45 @@ public class PassKeyService : IPassKeyService
             IsCredentialIdUniqueToUserAsyncDelegate callback = async (args, cancellationToken) =>
                 await _passKeyRepository.IsCredentialIdUniqueAsync(Convert.ToBase64String(args.CredentialId));
 
-            var success = await _fido2.MakeNewCredentialAsync(rawResponse, storedOptions, callback);
+            var success = await _fido2.MakeNewCredentialAsync(
+                new MakeNewCredentialParams
+                {
+                    AttestationResponse = rawResponse,
+                    OriginalOptions = storedOptions,
+                    IsCredentialIdUniqueToUserCallback = callback
+                },
+                CancellationToken.None
+            );
 
             var passKey = new PassKey
             {
                 Code = Guid.NewGuid(),
-                UserCode = userId,
+                UserCode = userCode,
                 CredentialId = Convert.ToBase64String(rawResponse.Id),
-                PublicKey = success?.Result?.PublicKey ?? Array.Empty<byte>(),
-                SignatureCounter = success?.Result?.Counter ?? 0
+                PublicKey = success.PublicKey,
+                SignatureCounter = success.SignCount
             };
 
             await _passKeyRepository.CreateAsync(passKey);
-            _logger.LogInformation("Registration verification completed successfully for user {UserId}", userId);
+            _logger.LogInformation("Registration verification completed successfully for user {UserId}", userCode);
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error verifying registration for user {UserId}", userId);
+            _logger.LogError(ex, "Error verifying registration for user {UserId}", userCode);
             throw;
         }
     }
 
-    public async Task<string> GenerateAuthenticationOptionsAsync(string credentialId)
+    public Task<string> GenerateAuthenticationOptionsAsync()
     {
-        try
+        var options = _fido2.GetAssertionOptions(new GetAssertionOptionsParams
         {
-            credentialId = credentialId.Replace("-", "+").Replace("_", "/") + "=";
-            var passKey = await _passKeyRepository.GetByCredentialIdAsync(credentialId);
-            if (passKey == null)
-            {
-                throw new KeyNotFoundException($"PassKey with credential ID {credentialId} not found");
-            }
-
-            var existingCredentials = new List<PublicKeyCredentialDescriptor>
-            {
-                new PublicKeyCredentialDescriptor(Convert.FromBase64String(credentialId))
-            };
-
-            var options = _fido2.GetAssertionOptions(
-                existingCredentials,
-                UserVerificationRequirement.Preferred
-            );
-
-            return JsonSerializer.Serialize(options);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating authentication options");
-            throw;
-        }
+            AllowedCredentials = new List<PublicKeyCredentialDescriptor>(),
+            UserVerification = UserVerificationRequirement.Required
+        });
+        return Task.FromResult(JsonSerializer.Serialize(options));
     }
 
     public async Task<PassKeyAuthenticationResponse> VerifyAuthenticationAsync(PassKeyAuthenticationRequest request)
@@ -233,12 +233,26 @@ public class PassKeyService : IPassKeyService
                 throw new KeyNotFoundException($"PassKey with credential ID {credentialId} not found");
             }
 
-            IsUserHandleOwnerOfCredentialIdAsync callback = (args, cancellationToken) =>
-                Task.FromResult(true); // Already verified by getting the stored PassKey
+            // เตรียม callback delegate ให้ตรง signature ใหม่
+            IsUserHandleOwnerOfCredentialIdAsync callback = (args, ct) =>
+                Task.FromResult(true);
 
-            var result = await _fido2.MakeAssertionAsync(response, storedOptions, storedPassKey.PublicKey, storedPassKey.SignatureCounter, callback);
+            // ใส่ทุกอย่างลงใน MakeAssertionParams
+            var makeParams = new MakeAssertionParams
+            {
+                AssertionResponse = response,
+                OriginalOptions = storedOptions,
+                StoredPublicKey = storedPassKey.PublicKey,
+                StoredSignatureCounter = storedPassKey.SignatureCounter,
+                IsUserHandleOwnerOfCredentialIdCallback = callback
+            };
 
-            await _passKeyRepository.UpdateSignatureCounterAsync(storedPassKey.Id, result.Counter);
+            // เรียกเมธอดใหม่ พร้อม CancellationToken.None (หรือจะส่ง HttpContext.RequestAborted เข้าไปก็ได้)
+            var result = await _fido2.MakeAssertionAsync(
+                makeParams,
+                CancellationToken.None
+            );
+            await _passKeyRepository.UpdateSignatureCounterAsync(storedPassKey.Id, result.SignCount);
 
             var user = await _userRepository.GetByUserCodeAsync(storedPassKey.UserCode);
             if (user == null)
