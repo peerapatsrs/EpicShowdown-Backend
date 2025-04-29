@@ -4,6 +4,8 @@ using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Repositories;
 using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Services;
+using EpicShowdown.API.Models.DTOs.Responses;
+using AutoMapper;
 
 namespace EpicShowdown.API.Controllers;
 
@@ -14,11 +16,16 @@ public class ProfileController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IMapper _mapper;
 
-    public ProfileController(IUserRepository userRepository, ICurrentUserService currentUserService)
+    public ProfileController(
+        IUserRepository userRepository,
+        ICurrentUserService currentUserService,
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _currentUserService = currentUserService;
+        _mapper = mapper;
     }
 
     [HttpGet("me")]
@@ -30,16 +37,8 @@ public class ProfileController : ControllerBase
             return Unauthorized(new { message = "User not found" });
         }
 
-        return Ok(new
-        {
-            user.Id,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.DateOfBirth,
-            user.PhoneNumber,
-            user.Address
-        });
+        var response = _mapper.Map<ProfileResponse>(user);
+        return Ok(response);
     }
 
     [HttpPut("update")]
