@@ -1,3 +1,4 @@
+using EpicShowdown.API.Models.Configurations;
 using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Http;
 using System.Text;
@@ -11,11 +12,16 @@ public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
 
     public HangfireAuthorizationFilter(IConfiguration configuration)
     {
-        var authSection = configuration.GetSection("Hangfire:Authentication");
-        _username = authSection.GetValue<string>("Username") ??
-            throw new InvalidOperationException("Hangfire Username is not configured");
-        _password = authSection.GetValue<string>("Password") ??
-            throw new InvalidOperationException("Hangfire Password is not configured");
+        var hangfireConfig = new HangfireConfiguration();
+        configuration.GetSection("Hangfire").Bind(hangfireConfig);
+
+        _username = hangfireConfig.Authentication.Username;
+        _password = hangfireConfig.Authentication.Password;
+
+        if (string.IsNullOrEmpty(_username) || string.IsNullOrEmpty(_password))
+        {
+            throw new InvalidOperationException("Hangfire authentication credentials are not configured");
+        }
     }
 
     public bool Authorize(DashboardContext context)

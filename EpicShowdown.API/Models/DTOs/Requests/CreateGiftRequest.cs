@@ -6,10 +6,7 @@ namespace EpicShowdown.API.Models.DTOs.Requests
     {
         [Required]
         public required string Name { get; set; }
-
-        [Required]
-        public required string Description { get; set; }
-
+        public string? Description { get; set; }
         [Required]
         public required string ImageUrl { get; set; }
     }

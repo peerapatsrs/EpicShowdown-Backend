@@ -62,7 +62,7 @@ namespace EpicShowdown.API.Controllers
             if (!result)
                 return NotFound();
 
-            return NoContent();
+            return Ok(new { message = "Gift deleted successfully" });
         }
     }
 }
