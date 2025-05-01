@@ -22,7 +22,7 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : Entity<int>
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet.OrderBy(e => e.Id).ToListAsync();
     }
 
     public virtual async Task<T> AddAsync(T entity)
