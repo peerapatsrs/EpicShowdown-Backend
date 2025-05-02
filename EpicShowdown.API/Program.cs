@@ -134,12 +134,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGiftRepository, GiftRepository>();
 builder.Services.AddScoped<IPassKeyRepository, PassKeyRepository>();
+builder.Services.AddScoped<IDisplayTemplateRepository, DisplayTemplateRepository>();
 
 // Register Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IGiftService, GiftService>();
+builder.Services.AddScoped<IDisplayTemplateService, DisplayTemplateService>();
 builder.Services.AddHttpContextAccessor();
 
 // Register Infrastructure Services

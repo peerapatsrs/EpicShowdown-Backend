@@ -14,7 +14,7 @@ namespace EpicShowdown.API.Services
         Task<DisplayTemplateResponse> GetByCodeAsync(Guid code);
         Task<List<DisplayTemplateResponse>> GetAllAsync();
         Task<DisplayTemplateResponse> CreateAsync(CreateDisplayTemplateRequest request);
-        Task<DisplayTemplateResponse> UpdateAsync(UpdateDisplayTemplateRequest request);
+        Task<DisplayTemplateResponse> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request);
         Task<bool> DeleteAsync(Guid code);
     }
 
@@ -53,12 +53,12 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<DisplayTemplateResponse>(created);
         }
 
-        public async Task<DisplayTemplateResponse> UpdateAsync(UpdateDisplayTemplateRequest request)
+        public async Task<DisplayTemplateResponse> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request)
         {
-            var existing = await _repository.GetByCodeAsync(request.Code);
+            var existing = await _repository.GetByCodeAsync(code);
             if (existing == null)
             {
-                throw new Exception($"Display template with code {request.Code} not found");
+                throw new Exception($"Display template with code {code} not found");
             }
 
             _mapper.Map(request, existing);

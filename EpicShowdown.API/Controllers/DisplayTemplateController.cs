@@ -41,10 +41,10 @@ namespace EpicShowdown.API.Controllers
             return Ok(template);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateDisplayTemplateRequest request)
+        [HttpPut("{code}")]
+        public async Task<IActionResult> Update(Guid code, [FromBody] UpdateDisplayTemplateRequest request)
         {
-            var template = await _service.UpdateAsync(request);
+            var template = await _service.UpdateAsync(code, request);
             return Ok(template);
         }
 
