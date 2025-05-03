@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
 
         var (accessToken, refreshToken) = await GenerateTokensAsync(user);
 
-        return Ok(new LoginResponse
+        return CreatedAtAction(nameof(Login), new LoginResponse
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken.Token
@@ -79,23 +79,23 @@ public class AuthController : ControllerBase
         var refreshToken = await _refreshTokenService.GetRefreshTokenAsync(request.RefreshToken);
         if (refreshToken == null)
         {
-            return BadRequest(new { message = "Invalid refresh token" });
+            return NotFound(new { message = "Invalid refresh token" });
         }
 
         if (refreshToken.IsRevoked)
         {
-            return BadRequest(new { message = "Refresh token has been revoked" });
+            return NotFound(new { message = "Refresh token has been revoked" });
         }
 
         if (refreshToken.ExpiryDate < DateTime.UtcNow)
         {
-            return BadRequest(new { message = "Refresh token has expired" });
+            return NotFound(new { message = "Refresh token has expired" });
         }
 
         var user = await _userRepository.GetByIdAsync(refreshToken.UserId);
         if (user == null)
         {
-            return BadRequest(new { message = "User not found" });
+            return NotFound(new { message = "User not found" });
         }
 
         var (accessToken, newRefreshToken) = await GenerateTokensAsync(user);
@@ -115,7 +115,7 @@ public class AuthController : ControllerBase
         var refreshToken = await _refreshTokenService.GetRefreshTokenAsync(request.RefreshToken);
         if (refreshToken == null)
         {
-            return BadRequest(new { message = "Invalid refresh token" });
+            return NotFound(new { message = "Invalid refresh token" });
         }
 
         await _refreshTokenService.RevokeRefreshTokenAsync(request.RefreshToken, GetIpAddress(), request.Reason);
@@ -128,7 +128,7 @@ public class AuthController : ControllerBase
     {
         var user = await _currentUserService.GetCurrentUser();
         if (user == null)
-            return Unauthorized(new { message = "User not found" });
+            return NotFound(new { message = "User not found" });
 
         var options = await _passKeyService.GenerateRegistrationOptionsAsync(user.UserCode, user.Email);
         return Ok(new { options });
@@ -140,7 +140,7 @@ public class AuthController : ControllerBase
     {
         var user = await _currentUserService.GetCurrentUser();
         var result = await _passKeyService.VerifyRegistrationAsync(user?.UserCode ?? Guid.Empty, request);
-        if (!result) return BadRequest(new { message = "PassKey registration failed" });
+        if (!result) return NotFound(new { message = "PassKey registration failed" });
         return Ok(new { message = "PassKey registered successfully" });
     }
 

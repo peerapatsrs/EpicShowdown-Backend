@@ -71,16 +71,29 @@ namespace EpicShowdown.API.Services
 
             if (request.DisplayTemplateCode.HasValue)
             {
-                var displayTemplate = await _displayTemplateRepository.GetByCodeAsync(request.DisplayTemplateCode.Value);
-                if (displayTemplate == null)
+                if (request.DisplayTemplateCode.Value == Guid.Empty)
                 {
-                    throw new ArgumentException($"Display template with code {request.DisplayTemplateCode} not found");
+                    contest.DisplayTemplate = null;
                 }
-                contest.DisplayTemplate = displayTemplate;
-            }
+                else
+                {
+                    var displayTemplate = await _displayTemplateRepository.GetByCodeAsync(request.DisplayTemplateCode.Value);
+                    if (displayTemplate == null)
+                    {
+                        throw new ArgumentException($"Display template with code {request.DisplayTemplateCode} not found");
+                    }
+                    contest.DisplayTemplate = displayTemplate;
+                }
 
-            var createdContest = await _contestRepository.CreateAsync(contest);
-            return _mapper.Map<ContestResponse>(createdContest);
+                var createdContest = await _contestRepository.CreateAsync(contest);
+                return _mapper.Map<ContestResponse>(createdContest);
+            }
+            else
+            {
+                contest.DisplayTemplate = null;
+                var createdContest = await _contestRepository.CreateAsync(contest);
+                return _mapper.Map<ContestResponse>(createdContest);
+            }
         }
 
         public async Task<ContestResponse> UpdateContestByCodeAsync(Guid code, UpdateContestRequest request)

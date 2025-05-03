@@ -11,11 +11,11 @@ namespace EpicShowdown.API.Services
 {
     public interface IDisplayTemplateService
     {
-        Task<DisplayTemplateResponse> GetByCodeAsync(Guid code);
+        Task<DisplayTemplateResponse?> GetByCodeAsync(Guid code);
         Task<List<DisplayTemplateResponse>> GetAllAsync();
         Task<DisplayTemplateResponse> CreateAsync(CreateDisplayTemplateRequest request);
-        Task<DisplayTemplateResponse> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request);
-        Task<bool> DeleteAsync(Guid code);
+        Task<DisplayTemplateResponse?> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request);
+        Task<bool?> DeleteAsync(Guid code);
     }
 
     public class DisplayTemplateService : IDisplayTemplateService
@@ -29,14 +29,13 @@ namespace EpicShowdown.API.Services
             _mapper = mapper;
         }
 
-        public async Task<DisplayTemplateResponse> GetByCodeAsync(Guid code)
+        public async Task<DisplayTemplateResponse?> GetByCodeAsync(Guid code)
         {
             var template = await _repository.GetByCodeAsync(code);
             if (template == null)
             {
-                throw new Exception($"Display template with code {code} not found");
+                return null;
             }
-
             return _mapper.Map<DisplayTemplateResponse>(template);
         }
 
@@ -53,12 +52,12 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<DisplayTemplateResponse>(created);
         }
 
-        public async Task<DisplayTemplateResponse> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request)
+        public async Task<DisplayTemplateResponse?> UpdateAsync(Guid code, UpdateDisplayTemplateRequest request)
         {
             var existing = await _repository.GetByCodeAsync(code);
             if (existing == null)
             {
-                throw new Exception($"Display template with code {code} not found");
+                return null;
             }
 
             _mapper.Map(request, existing);
@@ -66,7 +65,7 @@ namespace EpicShowdown.API.Services
             return _mapper.Map<DisplayTemplateResponse>(updated);
         }
 
-        public async Task<bool> DeleteAsync(Guid code)
+        public async Task<bool?> DeleteAsync(Guid code)
         {
             return await _repository.DeleteAsync(code);
         }

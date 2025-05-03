@@ -12,8 +12,7 @@ namespace EpicShowdown.API.Models.Entities
         public required string Name { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public required Guid ContestCode { get; set; }
+        public required Guid ContestCode { get; set; } = Guid.NewGuid();
 
         [StringLength(500)]
         public string? Description { get; set; }

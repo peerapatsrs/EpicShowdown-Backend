@@ -143,13 +143,21 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGiftRepository, GiftRepository>();
 builder.Services.AddScoped<IPassKeyRepository, PassKeyRepository>();
 builder.Services.AddScoped<IDisplayTemplateRepository, DisplayTemplateRepository>();
+builder.Services.AddScoped<IContestRepository, ContestRepository>();
+builder.Services.AddScoped<IContestantFieldRepository, ContestantFieldRepository>();
+builder.Services.AddScoped<IContestantGiftRepository, ContestantGiftRepository>();
 
 // Register Services
+builder.Services.Configure<S3Configuration>(builder.Configuration.GetSection("S3"));
+builder.Services.AddScoped<IFileService, FileService>();
+
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IGiftService, GiftService>();
 builder.Services.AddScoped<IDisplayTemplateService, DisplayTemplateService>();
+builder.Services.AddScoped<IContestService, ContestService>();
+builder.Services.AddScoped<IContestantFieldService, ContestantFieldService>();
 builder.Services.AddHttpContextAccessor();
 
 // Register Infrastructure Services
@@ -191,9 +199,6 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-builder.Services.Configure<S3Configuration>(builder.Configuration.GetSection("S3"));
-builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
 

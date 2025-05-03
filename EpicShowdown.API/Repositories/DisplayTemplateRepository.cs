@@ -10,7 +10,7 @@ namespace EpicShowdown.API.Repositories
         Task<List<DisplayTemplate>> GetAllAsync();
         Task<DisplayTemplate> CreateAsync(DisplayTemplate template);
         Task<DisplayTemplate> UpdateAsync(DisplayTemplate template);
-        Task<bool> DeleteAsync(Guid code);
+        Task<bool?> DeleteAsync(Guid code);
     }
 
     public class DisplayTemplateRepository : IDisplayTemplateRepository
@@ -56,12 +56,12 @@ namespace EpicShowdown.API.Repositories
             return template;
         }
 
-        public async Task<bool> DeleteAsync(Guid code)
+        public async Task<bool?> DeleteAsync(Guid code)
         {
             var template = await GetByCodeAsync(code);
             if (template == null)
             {
-                return false;
+                return null;
             }
 
             _context.Set<DisplayTemplate>().Remove(template);

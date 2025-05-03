@@ -26,6 +26,14 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Contest>()
+            .HasIndex(c => c.ContestCode)
+            .IsUnique();
+
         modelBuilder.Entity<Contest>()
             .HasMany(c => c.Contestants)
             .WithOne(c => c.Contest)
@@ -43,6 +51,10 @@ public class ApplicationDbContext : DbContext
             .WithOne(cg => cg.Contest)
             .HasForeignKey(cg => cg.ContestId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Gift>()
+            .HasIndex(g => g.Code)
+            .IsUnique();
 
         modelBuilder.Entity<Gift>()
             .HasMany(g => g.ContestGifts)

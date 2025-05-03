@@ -33,7 +33,7 @@ namespace EpicShowdown.API.Controllers
         {
             var gift = await _giftService.GetGiftByCodeAsync(code);
             if (gift == null)
-                return NotFound();
+                return NotFound(new { message = "Gift not found" });
 
             return Ok(gift);
         }
@@ -50,7 +50,7 @@ namespace EpicShowdown.API.Controllers
         {
             var updatedGift = await _giftService.UpdateGiftAsync(code, giftRequest);
             if (updatedGift == null)
-                return NotFound();
+                return NotFound(new { message = "Gift not found" });
 
             return Ok(updatedGift);
         }
@@ -60,7 +60,7 @@ namespace EpicShowdown.API.Controllers
         {
             var result = await _giftService.DeleteGiftAsync(code);
             if (!result)
-                return NotFound();
+                return NotFound(new { message = "Gift not found" });
 
             return Ok(new { message = "Gift deleted successfully" });
         }

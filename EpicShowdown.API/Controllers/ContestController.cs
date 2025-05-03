@@ -46,8 +46,15 @@ namespace EpicShowdown.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateContest(CreateContestRequest request)
         {
-            var createdContest = await _contestService.CreateContestAsync(request);
-            return CreatedAtAction(nameof(GetContestByCode), new { code = createdContest.ContestCode }, createdContest);
+            try
+            {
+                var createdContest = await _contestService.CreateContestAsync(request);
+                return CreatedAtAction(nameof(GetContestByCode), new { code = createdContest.ContestCode }, createdContest);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPut("{code}")]
@@ -71,7 +78,7 @@ namespace EpicShowdown.API.Controllers
             if (!result)
                 return NotFound();
 
-            return NoContent();
+            return Ok(new { message = "Contest deleted successfully" });
         }
 
         [HttpGet("{code}/contestants")]
@@ -122,7 +129,7 @@ namespace EpicShowdown.API.Controllers
             try
             {
                 await _contestService.DeleteContestantAsync(code, contestantId);
-                return NoContent();
+                return Ok(new { message = "Contestant deleted successfully" });
             }
             catch (ArgumentException ex)
             {
@@ -178,7 +185,7 @@ namespace EpicShowdown.API.Controllers
             try
             {
                 await _fieldService.DeleteAsync(code, fieldId);
-                return NoContent();
+                return Ok(new { message = "Field deleted successfully" });
             }
             catch (ArgumentException ex)
             {
