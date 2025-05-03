@@ -17,6 +17,14 @@ using System.Text.Json.Serialization;
 using EpicShowdown.API.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    builder.Configuration.GetSection("Kestrel").Bind(options);
+    options.ListenAnyIP(8000, listenOptions =>
+    {
+        listenOptions.UseHttps(); // ใช้ dev cert ที่ .NET สร้างให้อัตโนมัติ
+    });
+});
 
 // Configure DateTime to use UTC
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
