@@ -200,6 +200,14 @@ namespace EpicShowdown.API.Services
                     fieldEntity.Value = fieldValue.Value;
                     fieldEntity.UpdatedAt = DateTime.UtcNow;
                 }
+                else
+                {
+                    contestContestant.ContestantFieldValues.Add(new ContestantFieldValue
+                    {
+                        FieldName = fieldValue.FieldName,
+                        Value = fieldValue.Value
+                    });
+                }
             }
 
             contestContestant.UpdatedAt = DateTime.UtcNow;
