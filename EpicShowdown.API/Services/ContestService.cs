@@ -14,16 +14,17 @@ namespace EpicShowdown.API.Services
     public interface IContestService
     {
         Task<IEnumerable<ContestResponse>> GetAllContestsAsync();
+        Task<IEnumerable<ContestResponse>> GetAllByUserAsync();
         Task<ContestResponse?> GetContestByCodeAsync(Guid contestCode);
         Task<ContestResponse> CreateContestAsync(CreateContestRequest request);
         Task<ContestResponse> UpdateContestByCodeAsync(Guid code, UpdateContestRequest request);
         Task<bool> DeleteContestAsync(Guid code);
-        Task<IEnumerable<ContestantResponse>> GetContestantsByContestCodeAsync(Guid code);
         Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request);
         Task<ContestantResponse> UpdateContestantAsync(Guid contestCode, int contestantId, UpdateContestantRequest request);
-        Task DeleteContestantAsync(Guid contestCode, int contestantId);
+        Task<bool> DeleteContestantAsync(Guid contestCode, int contestantId);
         Task<ContestantGiftResponse> GiveGiftToContestantAsync(Guid contestCode, int contestantId, GiveGiftRequest request);
         Task<IEnumerable<ContestantGiftResponse>> GetContestantGiftsAsync(Guid contestCode, int contestantId);
+        Task<IEnumerable<ContestantResponse>> GetContestantsByContestCodeAsync(Guid contestCode);
     }
 
     public class ContestService : IContestService
@@ -33,6 +34,8 @@ namespace EpicShowdown.API.Services
         private readonly IDisplayTemplateRepository _displayTemplateRepository;
         private readonly IContestantGiftRepository _contestantGiftRepository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IContestContestantRepository _contestContestantRepository;
+        private readonly IContestantFieldRepository _contestantFieldRepository;
         private readonly IMapper _mapper;
 
         public ContestService(
@@ -41,7 +44,9 @@ namespace EpicShowdown.API.Services
             IDisplayTemplateRepository displayTemplateRepository,
             IContestantGiftRepository contestantGiftRepository,
             ICurrentUserService currentUserService,
-            IMapper mapper)
+            IMapper mapper,
+            IContestContestantRepository contestContestantRepository,
+            IContestantFieldRepository contestantFieldRepository)
         {
             _contestRepository = contestRepository;
             _fieldRepository = fieldRepository;
@@ -49,11 +54,23 @@ namespace EpicShowdown.API.Services
             _contestantGiftRepository = contestantGiftRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
+            _contestContestantRepository = contestContestantRepository;
+            _contestantFieldRepository = contestantFieldRepository;
         }
 
         public async Task<IEnumerable<ContestResponse>> GetAllContestsAsync()
         {
             var contests = await _contestRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ContestResponse>>(contests);
+        }
+
+        public async Task<IEnumerable<ContestResponse>> GetAllByUserAsync()
+        {
+            var currentUser = await _currentUserService.GetCurrentUser();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            var contests = await _contestRepository.GetAllByUserIdAsync(currentUser.Id);
             return _mapper.Map<IEnumerable<ContestResponse>>(contests);
         }
 
@@ -132,37 +149,26 @@ namespace EpicShowdown.API.Services
             return await _contestRepository.DeleteAsync(contest.Id);
         }
 
-        public async Task<IEnumerable<ContestantResponse>> GetContestantsByContestCodeAsync(Guid code)
-        {
-            var contest = await _contestRepository.GetByContestCodeAsync(code);
-            if (contest == null)
-                throw new ArgumentException("Contest not found");
-
-            var contestants = await _contestRepository.GetContestantsByContestIdAsync(contest.Id);
-            return _mapper.Map<IEnumerable<ContestantResponse>>(contestants);
-        }
-
         public async Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request)
         {
             var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
-            var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
-            if (field == null)
-                throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
+            var contestContestant = new ContestContestant
+            {
+                Contest = contest,
+                ContestantFieldValues = request.FieldValues.Select(f => new ContestantFieldValue
+                {
+                    FieldName = f.FieldName,
+                    Value = f.Value
+                }).ToList()
+            };
 
-            if (!ValidateFieldValue(field.Type, request.Value))
-                throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
-
-            var contestant = _mapper.Map<Contestant>(request);
-            contestant.ContestId = contest.Id;
-            contestant.CreatedAt = DateTime.UtcNow;
-
-            contest.Contestants.Add(contestant);
+            contest.ContestContestants.Add(contestContestant);
             await _contestRepository.UpdateAsync(contest);
 
-            return _mapper.Map<ContestantResponse>(contestant);
+            return _mapper.Map<ContestantResponse>(contestContestant);
         }
 
         public async Task<ContestantResponse> UpdateContestantAsync(Guid contestCode, int contestantId, UpdateContestantRequest request)
@@ -171,37 +177,45 @@ namespace EpicShowdown.API.Services
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
-            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
-            if (contestant == null)
+            var contestContestant = await _contestContestantRepository.GetByContestIdAndContestantIdAsync(contest.Id, contestantId);
+            if (contestContestant == null)
                 throw new ArgumentException("Contestant not found");
 
-            var field = await _fieldRepository.GetByNameAndContestIdAsync(request.FieldName, contest.Id);
-            if (field == null)
-                throw new ArgumentException($"Field '{request.FieldName}' is not defined for this contest");
+            foreach (var fieldValue in request.FieldValues)
+            {
+                var field = await _fieldRepository.GetByNameAndContestIdAsync(fieldValue.FieldName, contest.Id);
+                if (field == null)
+                    throw new ArgumentException($"Field '{fieldValue.FieldName}' is not defined for this contest");
 
-            if (!ValidateFieldValue(field.Type, request.Value))
-                throw new ArgumentException($"Value for field '{request.FieldName}' is not valid for type '{field.Type}'");
+                if (!ValidateFieldValue(field.Type, fieldValue.Value))
+                    throw new ArgumentException($"Value for field '{fieldValue.FieldName}' is not valid for type '{field.Type}'");
 
-            _mapper.Map(request, contestant);
-            contestant.UpdatedAt = DateTime.UtcNow;
+                var entityField = await _contestantFieldRepository.GetByNameAndContestIdAsync(fieldValue.FieldName, contest.Id);
+                if (entityField == null)
+                    throw new ArgumentException($"Field '{fieldValue.FieldName}' is not defined for this contest");
 
-            await _contestRepository.UpdateAsync(contest);
+                var fieldEntity = contestContestant.ContestantFieldValues.FirstOrDefault(f => f.FieldName == fieldValue.FieldName);
+                if (fieldEntity != null)
+                {
+                    fieldEntity.Value = fieldValue.Value;
+                    fieldEntity.UpdatedAt = DateTime.UtcNow;
+                }
+            }
 
-            return _mapper.Map<ContestantResponse>(contestant);
+            contestContestant.UpdatedAt = DateTime.UtcNow;
+            await _contestContestantRepository.SaveUpdateAsync(contestContestant);
+
+            return _mapper.Map<ContestantResponse>(contestContestant);
         }
 
-        public async Task DeleteContestantAsync(Guid contestCode, int contestantId)
+        public async Task<bool> DeleteContestantAsync(Guid contestCode, int contestantId)
         {
             var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
-            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
-            if (contestant == null)
-                throw new ArgumentException("Contestant not found");
-
-            contest.Contestants.Remove(contestant);
-            await _contestRepository.UpdateAsync(contest);
+            await _contestContestantRepository.SaveDeleteAsync(contest.Id, contestantId);
+            return true;
         }
 
         private bool ValidateFieldValue(ContestantFieldType type, string value)
@@ -209,6 +223,7 @@ namespace EpicShowdown.API.Services
             switch (type)
             {
                 case ContestantFieldType.Text:
+                case ContestantFieldType.Image:
                     return true;
                 case ContestantFieldType.Number:
                     return decimal.TryParse(value, out _);
@@ -218,8 +233,6 @@ namespace EpicShowdown.API.Services
                     return TimeSpan.TryParse(value, out _);
                 case ContestantFieldType.DateTime:
                     return DateTime.TryParse(value, out _);
-                case ContestantFieldType.Image:
-                    return Uri.TryCreate(value, UriKind.Absolute, out _);
                 default:
                     return false;
             }
@@ -231,7 +244,7 @@ namespace EpicShowdown.API.Services
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
-            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            var contestant = contest.ContestContestants.FirstOrDefault(c => c.Id == contestantId);
             if (contestant == null)
                 throw new ArgumentException("Contestant not found");
 
@@ -266,12 +279,22 @@ namespace EpicShowdown.API.Services
             if (contest == null)
                 throw new ArgumentException("Contest not found");
 
-            var contestant = contest.Contestants.FirstOrDefault(c => c.Id == contestantId);
+            var contestant = contest.ContestContestants.FirstOrDefault(c => c.Id == contestantId);
             if (contestant == null)
                 throw new ArgumentException("Contestant not found");
 
             var gifts = await _contestantGiftRepository.GetByContestantIdAsync(contestantId);
             return _mapper.Map<IEnumerable<ContestantGiftResponse>>(gifts);
+        }
+
+        public async Task<IEnumerable<ContestantResponse>> GetContestantsByContestCodeAsync(Guid contestCode)
+        {
+            var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
+            if (contest == null)
+                throw new ArgumentException("Contest not found");
+
+            var contestants = await _contestContestantRepository.GetAllByContestIdAsync(contest.Id);
+            return contestants.Select(c => _mapper.Map<ContestantResponse>(c));
         }
     }
 }

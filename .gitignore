@@ -51,3 +51,9 @@ appsettings.*.json
 # macOS
 .DS_Store
 sync-postman.sh
+wrapped.json
+swagger.json
+old_collection.json
+new_collection.json
+merged_collection.json
+merge-postman.js

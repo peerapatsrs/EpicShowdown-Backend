@@ -1,14 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using EpicShowdown.API.Models.DTOs.Public;
 
 namespace EpicShowdown.API.Models.DTOs.Requests
 {
     public class UpdateContestantRequest
     {
-        [StringLength(100)]
-        [Required]
-        public required string FieldName { get; set; }
-
-        [Required]
-        public required string Value { get; set; }
+        public List<ContestantFieldValuePublic> FieldValues { get; set; } = new List<ContestantFieldValuePublic>();
     }
 }

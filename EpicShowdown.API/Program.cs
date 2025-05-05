@@ -146,6 +146,7 @@ builder.Services.AddScoped<IDisplayTemplateRepository, DisplayTemplateRepository
 builder.Services.AddScoped<IContestRepository, ContestRepository>();
 builder.Services.AddScoped<IContestantFieldRepository, ContestantFieldRepository>();
 builder.Services.AddScoped<IContestantGiftRepository, ContestantGiftRepository>();
+builder.Services.AddScoped<IContestContestantRepository, ContestContestantRepository>();
 
 // Register Services
 builder.Services.Configure<S3Configuration>(builder.Configuration.GetSection("S3"));

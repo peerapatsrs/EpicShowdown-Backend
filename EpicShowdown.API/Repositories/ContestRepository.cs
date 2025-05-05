@@ -11,12 +11,12 @@ namespace EpicShowdown.API.Repositories
     public interface IContestRepository
     {
         Task<IEnumerable<Contest>> GetAllAsync();
+        Task<IEnumerable<Contest>> GetAllByUserIdAsync(int userId);
         Task<Contest?> GetByIdAsync(int id);
         Task<Contest?> GetByContestCodeAsync(Guid contestCode);
         Task<Contest> CreateAsync(Contest contest);
         Task<Contest> UpdateAsync(Contest contest);
         Task<bool> DeleteAsync(int id);
-        Task<IEnumerable<Contestant>> GetContestantsByContestIdAsync(int contestId);
     }
 
     public class ContestRepository : IContestRepository
@@ -35,15 +35,25 @@ namespace EpicShowdown.API.Repositories
         public async Task<IEnumerable<Contest>> GetAllAsync()
         {
             return await _context.Contests
-                .Include(c => c.Contestants)
+                .Include(c => c.ContestContestants)
                 .Include(c => c.DisplayTemplate)
+                .OrderByDescending(c => c.Id)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Contest>> GetAllByUserIdAsync(int userId)
+        {
+            return await _context.Contests
+                .Include(c => c.ContestContestants)
+                .Include(c => c.DisplayTemplate)
+                .Where(c => c.CreatedBy.Id == userId)
                 .ToListAsync();
         }
 
         public async Task<Contest?> GetByIdAsync(int id)
         {
             return await _context.Contests
-                .Include(c => c.Contestants)
+                .Include(c => c.ContestContestants)
                 .Include(c => c.DisplayTemplate)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
@@ -51,7 +61,7 @@ namespace EpicShowdown.API.Repositories
         public async Task<Contest?> GetByContestCodeAsync(Guid contestCode)
         {
             return await _context.Contests
-                .Include(c => c.Contestants)
+                .Include(c => c.ContestContestants)
                 .Include(c => c.DisplayTemplate)
                 .FirstOrDefaultAsync(c => c.ContestCode == contestCode);
         }
@@ -84,13 +94,6 @@ namespace EpicShowdown.API.Repositories
             _context.Contests.Remove(contest);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        public async Task<IEnumerable<Contestant>> GetContestantsByContestIdAsync(int contestId)
-        {
-            return await _context.Contestants
-                .Where(c => c.ContestId == contestId)
-                .ToListAsync();
         }
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using EpicShowdown.API.Models.Entities;
 using EpicShowdown.API.Models.DTOs.Requests;
 using EpicShowdown.API.Models.DTOs.Responses;
+using EpicShowdown.API.Models.DTOs.Public;
 
 namespace EpicShowdown.API.Mappings
 {
@@ -22,10 +23,18 @@ namespace EpicShowdown.API.Mappings
                 .ForMember(dest => dest.DisplayTemplate, opt => opt.Ignore());
 
             // Contestant Mappings
-            CreateMap<Contestant, ContestantResponse>()
-                .ForMember(dest => dest.ContestCode, opt => opt.MapFrom(src => src.Contest.ContestCode));
-            CreateMap<CreateContestantRequest, Contestant>();
-            CreateMap<UpdateContestantRequest, Contestant>();
+            CreateMap<CreateContestantRequest, ContestContestant>()
+                .ForMember(dest => dest.ContestantFieldValues, opt => opt.MapFrom(src => src.FieldValues));
+
+            CreateMap<ContestContestant, ContestantResponse>()
+                .ForMember(dest => dest.ContestCode, opt => opt.MapFrom(src => src.Contest.ContestCode))
+                .ForMember(dest => dest.FieldValues, opt => opt.MapFrom(src => src.ContestantFieldValues));
+
+            CreateMap<ContestantFieldValue, ContestantFieldValuePublic>();
+            CreateMap<ContestantFieldValuePublic, ContestantFieldValue>();
+
+            CreateMap<CreateContestantRequest, Models.Entities.ContestantFieldValue>();
+            CreateMap<UpdateContestantRequest, Models.Entities.ContestantFieldValue>();
 
             // ContestantGift Mappings
             CreateMap<ContestantGift, ContestantGiftResponse>()

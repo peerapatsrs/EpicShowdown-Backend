@@ -15,7 +15,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Contest> Contests { get; set; }
-    public DbSet<Contestant> Contestants { get; set; }
+    public DbSet<ContestContestant> ContestContestants { get; set; }
+    public DbSet<ContestantFieldValue> ContestantFieldValues { get; set; }
     public DbSet<ContestantField> ContestantFields { get; set; }
     public DbSet<Gift> Gifts { get; set; }
     public DbSet<ContestGift> ContestGifts { get; set; }
@@ -35,7 +36,7 @@ public class ApplicationDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Contest>()
-            .HasMany(c => c.Contestants)
+            .HasMany(c => c.ContestContestants)
             .WithOne(c => c.Contest)
             .HasForeignKey(c => c.ContestId)
             .OnDelete(DeleteBehavior.Cascade);

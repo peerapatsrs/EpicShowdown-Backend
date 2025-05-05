@@ -39,7 +39,7 @@ namespace EpicShowdown.API.Models.Entities
         public virtual DisplayTemplate? DisplayTemplate { get; set; }
 
         // Navigation properties
-        public virtual ICollection<Contestant> Contestants { get; set; } = new List<Contestant>();
+        public virtual ICollection<ContestContestant> ContestContestants { get; set; } = new List<ContestContestant>();
         public virtual ICollection<ContestantField> Fields { get; set; } = new List<ContestantField>();
         public ICollection<ContestGift> ContestGifts { get; set; } = new List<ContestGift>();
     }

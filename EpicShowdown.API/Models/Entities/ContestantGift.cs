@@ -7,7 +7,7 @@ namespace EpicShowdown.API.Models.Entities
     public class ContestantGift : Entity<int>
     {
         [Required]
-        public required Contestant Contestant { get; set; }
+        public required ContestContestant Contestant { get; set; }
         public int ContestantId { get; set; }
 
         [Required]

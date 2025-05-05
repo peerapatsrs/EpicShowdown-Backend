@@ -26,10 +26,17 @@ namespace EpicShowdown.API.Controllers
             _fieldService = fieldService;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllContests()
         {
             var contests = await _contestService.GetAllContestsAsync();
+            return Ok(contests);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetAllByUserContests()
+        {
+            var contests = await _contestService.GetAllByUserAsync();
             return Ok(contests);
         }
 
@@ -149,6 +156,14 @@ namespace EpicShowdown.API.Controllers
             {
                 return NotFound(ex.Message);
             }
+        }
+
+        [HttpGet("field-types")]
+        [AllowAnonymous]
+        public IActionResult GetContestantFieldTypes()
+        {
+            var types = Enum.GetNames(typeof(Models.Enums.ContestantFieldType));
+            return Ok(types);
         }
 
         [HttpPost("{code}/fields")]
