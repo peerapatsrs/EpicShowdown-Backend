@@ -7,7 +7,7 @@ namespace EpicShowdown.API.Services;
 
 public interface ICurrentUserService
 {
-    Task<User?> GetCurrentUser();
+    Task<User?> GetCurrentUserAsync();
 }
 
 public class CurrentUserService : ICurrentUserService
@@ -22,7 +22,7 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<User?> GetCurrentUser()
+    public async Task<User?> GetCurrentUserAsync()
     {
         if (_currentUser != null) return _currentUser;
 

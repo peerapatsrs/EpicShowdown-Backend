@@ -66,7 +66,7 @@ namespace EpicShowdown.API.Services
 
         public async Task<IEnumerable<ContestResponse>> GetAllByUserAsync()
         {
-            var currentUser = await _currentUserService.GetCurrentUser();
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
             if (currentUser == null)
                 throw new InvalidOperationException("User not found");
 
@@ -85,6 +85,14 @@ namespace EpicShowdown.API.Services
             var contest = _mapper.Map<Contest>(request);
             contest.CreatedAt = DateTime.UtcNow;
             contest.IsActive = true;
+
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            if (contest.CreatedBy != currentUser)
+                throw new InvalidOperationException("You are not allowed to update this contest");
+
 
             if (request.DisplayTemplateCode.HasValue)
             {
@@ -119,6 +127,14 @@ namespace EpicShowdown.API.Services
             if (existingContest == null)
                 throw new ArgumentException("Contest not found");
 
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            if (existingContest.CreatedBy != currentUser)
+                throw new InvalidOperationException("You are not allowed to update this contest");
+
+
             _mapper.Map(request, existingContest);
             existingContest.UpdatedAt = DateTime.UtcNow;
 
@@ -137,6 +153,7 @@ namespace EpicShowdown.API.Services
             }
 
             await _contestRepository.UpdateAsync(existingContest);
+            await _contestRepository.SaveChangesAsync();
             return _mapper.Map<ContestResponse>(existingContest);
         }
 
@@ -145,6 +162,13 @@ namespace EpicShowdown.API.Services
             var contest = await _contestRepository.GetByContestCodeAsync(code);
             if (contest == null)
                 return false;
+
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            if (contest.CreatedBy != currentUser)
+                throw new InvalidOperationException("You are not allowed to update this contest");
 
             await _contestRepository.DeleteAsync(contest);
             return true;
@@ -168,7 +192,7 @@ namespace EpicShowdown.API.Services
 
             contest.ContestContestants.Add(contestContestant);
             await _contestRepository.UpdateAsync(contest);
-
+            await _contestRepository.SaveChangesAsync();
             return _mapper.Map<ContestantResponse>(contestContestant);
         }
 
@@ -181,6 +205,15 @@ namespace EpicShowdown.API.Services
             var contestContestant = await _contestContestantRepository.GetByContestIdAndContestantIdAsync(contest.Id, contestantId);
             if (contestContestant == null)
                 throw new ArgumentException("Contestant not found");
+
+
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            if (contest.CreatedBy != currentUser)
+                throw new InvalidOperationException("You are not allowed to update this contest");
+
 
             foreach (var fieldValue in request.FieldValues)
             {
@@ -222,6 +255,15 @@ namespace EpicShowdown.API.Services
             var contest = await _contestRepository.GetByContestCodeAsync(contestCode);
             if (contest == null)
                 throw new ArgumentException("Contest not found");
+
+
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new InvalidOperationException("User not found");
+
+            if (contest.CreatedBy != currentUser)
+                throw new InvalidOperationException("You are not allowed to update this contest");
+
 
             await _contestContestantRepository.SaveDeleteAsync(contest.Id, contestantId);
             return true;
@@ -267,7 +309,7 @@ namespace EpicShowdown.API.Services
                 throw new InvalidOperationException(errorMessage);
 
             // Try to get current user if logged in
-            var currentUser = await _currentUserService.GetCurrentUser();
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
 
             var contestantGift = new ContestantGift
             {

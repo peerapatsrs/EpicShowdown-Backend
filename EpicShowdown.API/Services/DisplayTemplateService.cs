@@ -49,6 +49,7 @@ namespace EpicShowdown.API.Services
         {
             var template = _mapper.Map<DisplayTemplate>(request);
             var created = await _repository.AddAsync(template);
+            await _repository.SaveChangesAsync();
             return _mapper.Map<DisplayTemplateResponse>(created);
         }
 
@@ -62,6 +63,7 @@ namespace EpicShowdown.API.Services
 
             _mapper.Map(request, existing);
             await _repository.UpdateAsync(existing);
+            await _repository.SaveChangesAsync();
             return _mapper.Map<DisplayTemplateResponse>(existing);
         }
 
@@ -73,6 +75,7 @@ namespace EpicShowdown.API.Services
                 return null;
             }
             await _repository.DeleteAsync(template);
+            await _repository.SaveChangesAsync();
             return true;
         }
     }

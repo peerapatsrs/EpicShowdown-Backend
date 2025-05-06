@@ -126,7 +126,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetPassKeyRegistrationOptions()
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
             return NotFound(new { message = "User not found" });
 
@@ -138,7 +138,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> VerifyPassKeyRegistration([FromBody] PassKeyRegistrationRequest request)
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         var result = await _passKeyService.VerifyRegistrationAsync(user?.UserCode ?? Guid.Empty, request);
         if (!result) return NotFound(new { message = "PassKey registration failed" });
         return Ok(new { message = "PassKey registered successfully" });
@@ -171,7 +171,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RevokePassKey(string passKeyId)
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
             return Unauthorized(new { message = "User not found" });
 

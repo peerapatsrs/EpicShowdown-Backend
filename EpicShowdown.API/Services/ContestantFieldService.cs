@@ -55,6 +55,7 @@ namespace EpicShowdown.API.Services
             field.CreatedAt = DateTime.UtcNow;
 
             var createdField = await _fieldRepository.AddAsync(field);
+            await _fieldRepository.SaveChangesAsync();
             return _mapper.Map<ContestantFieldResponse>(createdField);
         }
 
@@ -75,6 +76,7 @@ namespace EpicShowdown.API.Services
             field.UpdatedAt = DateTime.UtcNow;
 
             await _fieldRepository.UpdateAsync(field);
+            await _fieldRepository.SaveChangesAsync();
             return _mapper.Map<ContestantFieldResponse>(field);
         }
 
@@ -89,6 +91,7 @@ namespace EpicShowdown.API.Services
                 return false;
 
             await _fieldRepository.DeleteAsync(field);
+            await _fieldRepository.SaveChangesAsync();
             return true;
         }
     }

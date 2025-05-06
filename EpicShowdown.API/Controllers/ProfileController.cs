@@ -31,7 +31,7 @@ public class ProfileController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetProfile()
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
         {
             return Unauthorized(new { message = "User not found" });
@@ -44,7 +44,7 @@ public class ProfileController : ControllerBase
     [HttpPut("update")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
         {
             return Unauthorized(new { message = "User not found" });
@@ -65,7 +65,7 @@ public class ProfileController : ControllerBase
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
-        var user = await _currentUserService.GetCurrentUser();
+        var user = await _currentUserService.GetCurrentUserAsync();
         if (user == null)
         {
             return Unauthorized(new { message = "User not found" });
