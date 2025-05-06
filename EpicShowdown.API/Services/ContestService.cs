@@ -102,13 +102,13 @@ namespace EpicShowdown.API.Services
                     contest.DisplayTemplate = displayTemplate;
                 }
 
-                var createdContest = await _contestRepository.CreateAsync(contest);
+                var createdContest = await _contestRepository.AddAsync(contest);
                 return _mapper.Map<ContestResponse>(createdContest);
             }
             else
             {
                 contest.DisplayTemplate = null;
-                var createdContest = await _contestRepository.CreateAsync(contest);
+                var createdContest = await _contestRepository.AddAsync(contest);
                 return _mapper.Map<ContestResponse>(createdContest);
             }
         }
@@ -136,8 +136,8 @@ namespace EpicShowdown.API.Services
                 existingContest.DisplayTemplate = null;
             }
 
-            var updatedContest = await _contestRepository.UpdateAsync(existingContest);
-            return _mapper.Map<ContestResponse>(updatedContest);
+            await _contestRepository.UpdateAsync(existingContest);
+            return _mapper.Map<ContestResponse>(existingContest);
         }
 
         public async Task<bool> DeleteContestAsync(Guid code)
@@ -146,7 +146,8 @@ namespace EpicShowdown.API.Services
             if (contest == null)
                 return false;
 
-            return await _contestRepository.DeleteAsync(contest.Id);
+            await _contestRepository.DeleteAsync(contest);
+            return true;
         }
 
         public async Task<ContestantResponse> AddContestantAsync(Guid contestCode, CreateContestantRequest request)

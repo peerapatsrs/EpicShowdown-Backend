@@ -1,62 +1,53 @@
 using EpicShowdown.API.Data;
 using EpicShowdown.API.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using EpicShowdown.API.Data.Base;
 
 namespace EpicShowdown.API.Repositories;
 
-public interface IPassKeyRepository
+public interface IPassKeyRepository : IRepositoryBase<PassKey>
 {
     Task<PassKey?> GetByCredentialIdAsync(string credentialId);
     Task<IEnumerable<PassKey>> GetByUserCodeAsync(Guid userCode);
     Task<bool> IsCredentialIdUniqueAsync(string credentialId);
-    Task<PassKey> CreateAsync(PassKey passKey);
     Task UpdateSignatureCounterAsync(int passKeyId, uint newCounter);
     Task<bool> RevokeAsync(Guid userCode, string credentialId);
 }
 
-public class PassKeyRepository : IPassKeyRepository
+public class PassKeyRepository : RepositoryBase<PassKey>, IPassKeyRepository
 {
-    private readonly ApplicationDbContext _context;
     private readonly ILogger<PassKeyRepository> _logger;
 
     public PassKeyRepository(
         ApplicationDbContext context,
         ILogger<PassKeyRepository> logger)
+        : base(context)
     {
-        _context = context;
         _logger = logger;
     }
 
     public async Task<PassKey?> GetByCredentialIdAsync(string credentialId)
     {
-        return await _context.PassKeys
+        return await _dbSet
             .FirstOrDefaultAsync(p => p.CredentialId == credentialId && p.IsActive);
     }
 
     public async Task<IEnumerable<PassKey>> GetByUserCodeAsync(Guid userCode)
     {
-        return await _context.PassKeys
+        return await _dbSet
             .Where(p => p.UserCode == userCode && p.IsActive)
             .ToListAsync();
     }
 
     public async Task<bool> IsCredentialIdUniqueAsync(string credentialId)
     {
-        return !await _context.PassKeys
+        return !await _dbSet
             .AnyAsync(p => p.CredentialId == credentialId);
-    }
-
-    public async Task<PassKey> CreateAsync(PassKey passKey)
-    {
-        passKey.Code = Guid.NewGuid();
-        _context.PassKeys.Add(passKey);
-        await _context.SaveChangesAsync();
-        return passKey;
     }
 
     public async Task UpdateSignatureCounterAsync(int passKeyId, uint newCounter)
     {
-        var passKey = await _context.PassKeys.FindAsync(passKeyId);
+        var passKey = await _dbSet.FindAsync(passKeyId);
         if (passKey == null)
         {
             throw new KeyNotFoundException($"PassKey with ID {passKeyId} not found");
@@ -68,7 +59,7 @@ public class PassKeyRepository : IPassKeyRepository
 
     public async Task<bool> RevokeAsync(Guid userCode, string credentialId)
     {
-        var passKey = await _context.PassKeys
+        var passKey = await _dbSet
             .FirstOrDefaultAsync(p => p.UserCode == userCode && p.CredentialId == credentialId && p.IsActive);
 
         if (passKey == null)

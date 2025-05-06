@@ -154,7 +154,7 @@ public class PassKeyService : IPassKeyService
                 SignatureCounter = success.SignCount
             };
 
-            await _passKeyRepository.CreateAsync(passKey);
+            await _passKeyRepository.AddAsync(passKey);
             _logger.LogInformation("Registration verification completed successfully for user {UserId}", userCode);
 
             return true;

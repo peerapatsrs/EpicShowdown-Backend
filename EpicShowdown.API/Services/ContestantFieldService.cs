@@ -54,7 +54,7 @@ namespace EpicShowdown.API.Services
             field.ContestId = contest.Id;
             field.CreatedAt = DateTime.UtcNow;
 
-            var createdField = await _fieldRepository.CreateAsync(field);
+            var createdField = await _fieldRepository.AddAsync(field);
             return _mapper.Map<ContestantFieldResponse>(createdField);
         }
 
@@ -74,8 +74,8 @@ namespace EpicShowdown.API.Services
             _mapper.Map(request, field);
             field.UpdatedAt = DateTime.UtcNow;
 
-            var updatedField = await _fieldRepository.UpdateAsync(field);
-            return _mapper.Map<ContestantFieldResponse>(updatedField);
+            await _fieldRepository.UpdateAsync(field);
+            return _mapper.Map<ContestantFieldResponse>(field);
         }
 
         public async Task<bool> DeleteAsync(Guid contestCode, int fieldId)
@@ -88,7 +88,8 @@ namespace EpicShowdown.API.Services
             if (field == null || field.ContestId != contest.Id)
                 return false;
 
-            return await _fieldRepository.DeleteAsync(fieldId);
+            await _fieldRepository.DeleteAsync(field);
+            return true;
         }
     }
 }

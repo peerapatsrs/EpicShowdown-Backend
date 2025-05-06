@@ -48,7 +48,7 @@ namespace EpicShowdown.API.Services
         public async Task<DisplayTemplateResponse> CreateAsync(CreateDisplayTemplateRequest request)
         {
             var template = _mapper.Map<DisplayTemplate>(request);
-            var created = await _repository.CreateAsync(template);
+            var created = await _repository.AddAsync(template);
             return _mapper.Map<DisplayTemplateResponse>(created);
         }
 
@@ -61,13 +61,19 @@ namespace EpicShowdown.API.Services
             }
 
             _mapper.Map(request, existing);
-            var updated = await _repository.UpdateAsync(existing);
-            return _mapper.Map<DisplayTemplateResponse>(updated);
+            await _repository.UpdateAsync(existing);
+            return _mapper.Map<DisplayTemplateResponse>(existing);
         }
 
         public async Task<bool?> DeleteAsync(Guid code)
         {
-            return await _repository.DeleteAsync(code);
+            var template = await _repository.GetByCodeAsync(code);
+            if (template == null)
+            {
+                return null;
+            }
+            await _repository.DeleteAsync(template);
+            return true;
         }
     }
 }

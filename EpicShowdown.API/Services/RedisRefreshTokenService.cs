@@ -32,7 +32,7 @@ public class RefreshTokenService : IRefreshTokenService
 
     public async Task<RefreshToken> GenerateRefreshTokenAsync(int userId, string ipAddress)
     {
-        var user = await _userRepository.GetByUserIdAsync(userId)
+        var user = await _userRepository.GetByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found");
 
         var expirationMinutes = Convert.ToInt32(_configuration["JwtSettings:ExpirationInMinutes"] ?? "60");

@@ -8,7 +8,6 @@ namespace EpicShowdown.API.Repositories;
 
 public interface IUserRepository : IRepositoryBase<User>
 {
-    Task<User?> GetByUserIdAsync(int userId);
     Task<User?> GetByUserCodeAsync(Guid userCode);
     Task<User?> GetByEmailAsync(string email);
     Task<bool> ExistsByEmailAsync(string email);
@@ -18,11 +17,6 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
 {
     public UserRepository(ApplicationDbContext context) : base(context)
     {
-    }
-
-    public async Task<User?> GetByUserIdAsync(int userId)
-    {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
     public async Task<User?> GetByUserCodeAsync(Guid userCode)
