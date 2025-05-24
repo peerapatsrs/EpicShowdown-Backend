@@ -203,6 +203,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Apply migrations automatically
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
+
 app.UseCors("AllowFrontend");
 
 // กำหนดให้ใช้ UTC เป็นค่าเริ่มต้นสำหรับ DateTime ในแอปพลิเคชัน
