@@ -3,7 +3,7 @@ primary_region = "sin"  # Singapore region
 
 # ถ้าใช้ Dockerfile ก็แก้เป็น builder = "dockerfile" 
 [build]
-  builder = "nixpacks"
+  builder = "railwayapp/nixpacks:v1.39.0"
 
 # ตั้ง ENV สำหรับ ASP.NET Core
 [env]
