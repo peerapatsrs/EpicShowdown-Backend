@@ -1,6 +1,9 @@
 app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
+[build]
+  dockerfile = "Dockerfile"
+
 [env]
   ASPNETCORE_ENVIRONMENT = "Development"
   ASPNETCORE_URLS = "http://+:8080"
