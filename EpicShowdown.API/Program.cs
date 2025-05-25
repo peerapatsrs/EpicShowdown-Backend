@@ -19,11 +19,11 @@ using EpicShowdown.API.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options =>
 {
+    var portEnv = Environment.GetEnvironmentVariable("PORT");
+    var port = string.IsNullOrEmpty(portEnv) ? 8080 : int.Parse(portEnv);
+    options.ListenAnyIP(port);
+    // ถ้ามี config เพิ่มเติมจาก launchsettings.json ก็ bind ต่อได้
     builder.Configuration.GetSection("Kestrel").Bind(options);
-    options.ListenAnyIP(8000, listenOptions =>
-    {
-        listenOptions.UseHttps(); // ใช้ dev cert ที่ .NET สร้างให้อัตโนมัติ
-    });
 });
 
 // Configure DateTime to use UTC
@@ -188,16 +188,17 @@ builder.Services.AddFido2(options =>
     options.TimestampDriftTolerance = Convert.ToInt32(builder.Configuration["Fido2:TimestampDriftTolerance"] ?? "300000");
 });
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowAll", builder =>
     {
-        policy
-            .SetIsOriginAllowed(origin =>
-                origin == "https://localhost:3000" || origin == "https://8315-223-205-243-155.ngrok-free.app")
-            .AllowCredentials()
+        builder
+            .WithOrigins("https://epicshowdown-frontend.fly.dev")
+            .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowCredentials();
     });
 });
 
@@ -210,13 +211,13 @@ using (var scope = app.Services.CreateScope())
     dbContext.Database.Migrate();
 }
 
-app.UseCors("AllowFrontend");
+app.UseCors("AllowAll");
 
 // กำหนดให้ใช้ UTC เป็นค่าเริ่มต้นสำหรับ DateTime ในแอปพลิเคชัน
 AppContext.SetSwitch("System.Globalization.UseUtcDateTime", true);
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -234,5 +235,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
     Authorization = new[] { new HangfireAuthorizationFilter(app.Configuration) }
 });
+
+app.MapHealthChecks("/health");
 
 app.Run();

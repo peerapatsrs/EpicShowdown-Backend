@@ -1,35 +1,42 @@
 app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
-[platform]
-  type = "dotnet"
+# ถ้าใช้ Dockerfile ก็แก้เป็น builder = "dockerfile" 
+[build]
+  builder = "nixpacks"
 
+# ตั้ง ENV สำหรับ ASP.NET Core
 [env]
-  ASPNETCORE_ENVIRONMENT = "Development"
-  ASPNETCORE_URLS = "http://+:8080"
+  DOTNET_ENVIRONMENT = "Production"
+  ASPNETCORE_URLS = "http://0.0.0.0:8080"
 
-[http_service]
+# สัญญาณปิดแอปที่ fly จะใช้
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+# กำหนด service ว่าเปิดพอร์ต 8080 ภายใน
+[[services]]
   internal_port = 8080
-  force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 1
-  processes = ["app"]
+  protocol = "tcp"
 
-  [[http_service.ports]]
-    port = 80
-    handlers = ["http"]
-  [[http_service.ports]]
-    port = 443
-    handlers = ["tls", "http"]
-
-  [http_service.concurrency]
+  [services.concurrency]
     type = "connections"
-    hard_limit = 1000
-    soft_limit = 500
+    soft_limit = 20
+    hard_limit = 25
 
-  [[http_service.tcp_checks]]
+  # เปิดพอร์ต HTTP
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  # เปิดพอร์ต HTTPS (ต้องเซ็ต TLS cert ที่ fly.io ด้วย)
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  # เช็คลูกข่ายก่อนรับ traffic
+  [[services.tcp_checks]]
+    grace_period = "1s"
     interval = "15s"
     timeout = "2s"
-    grace_period = "1s"
-    restart_limit = 0
+    port = 8080
