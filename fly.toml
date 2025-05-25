@@ -2,7 +2,8 @@ app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
 [build]
-  builder = "nixpacks"
+  builder    = "docker"
+  dockerfile = "Dockerfile"
 
 [env]
   ASPNETCORE_ENVIRONMENT = "Development"
@@ -17,9 +18,6 @@ primary_region = "sin"  # Singapore region
   processes = ["app"]
 
   [[http_service.ports]]
-    port = 80
-    handlers = ["http"]
-  [[http_service.ports]]
     port = 443
     handlers = ["tls", "http"]
 
@@ -33,7 +31,3 @@ primary_region = "sin"  # Singapore region
     timeout = "2s"
     grace_period = "1s"
     restart_limit = 0
-
-[mounts]
-  source = "data"
-  destination = "/app/data" 
