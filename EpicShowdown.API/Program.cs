@@ -21,9 +21,15 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     var portEnv = Environment.GetEnvironmentVariable("PORT");
     var port = string.IsNullOrEmpty(portEnv) ? 8080 : int.Parse(portEnv);
+
+    // ฟัง HTTP เท่านั้นบน fly.io (TLS terminate ที่ edge ให้ fly.io)
     options.ListenAnyIP(port);
-    // ถ้ามี config เพิ่มเติมจาก launchsettings.json ก็ bind ต่อได้
-    builder.Configuration.GetSection("Kestrel").Bind(options);
+
+    // Bind เพิ่มเติมแค่ใน Dev (ถ้ามีคอนฟิกอื่นใน appsettings.Development.json)
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Configuration.GetSection("Kestrel").Bind(options);
+    }
 });
 
 // Configure DateTime to use UTC
@@ -195,7 +201,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", builder =>
     {
         builder
-            .WithOrigins("https://epicshowdown-frontend.fly.dev")
+            .WithOrigins("http://epicshowdown-frontend.internal:8080")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();

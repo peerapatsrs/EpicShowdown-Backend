@@ -3,7 +3,8 @@ primary_region = "sin"  # Singapore region
 
 # ตั้ง ENV สำหรับ ASP.NET Core
 [env]
-  DOTNET_ENVIRONMENT = "Production"
+  DOTNET_ENVIRONMENT = "Dev"
+  ASPNETCORE_ENVIRONMENT = "Dev"
   ASPNETCORE_URLS = "http://0.0.0.0:8080"
 
 # สัญญาณปิดแอปที่ fly จะใช้
