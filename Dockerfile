@@ -22,12 +22,5 @@ WORKDIR /app
 # Copy the published application from the build stage
 COPY --from=build /app/publish .
 
-# Set environment variables
-ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Development
-
-# Expose port 80
-EXPOSE 80
-
 # Start the application
 ENTRYPOINT ["dotnet", "EpicShowdown.API.dll"] 
