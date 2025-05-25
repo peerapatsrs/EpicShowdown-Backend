@@ -1,9 +1,8 @@
-app = "epicshowdown-api"
+app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
 [build]
-  builder    = "docker"
-  dockerfile = "Dockerfile"
+  builder = "nixpacks"
 
 [env]
   ASPNETCORE_ENVIRONMENT = "Development"
