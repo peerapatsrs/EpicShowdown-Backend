@@ -4,6 +4,9 @@ primary_region = "sin"  # Singapore region
 [build]
   dockerfile = "Dockerfile"
 
+[platform]
+  type = "dotnet"
+
 [env]
   ASPNETCORE_ENVIRONMENT = "Development"
   ASPNETCORE_URLS = "http://+:8080"
