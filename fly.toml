@@ -2,7 +2,6 @@ app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
 [build]
-  builder    = "docker"
   dockerfile = "Dockerfile"
 
 [env]
