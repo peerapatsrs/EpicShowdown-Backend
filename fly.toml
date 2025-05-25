@@ -1,9 +1,6 @@
 app = "epicshowdown-backend"
 primary_region = "sin"  # Singapore region
 
-[build]
-  dockerfile = "Dockerfile"
-
 [platform]
   type = "dotnet"
 
