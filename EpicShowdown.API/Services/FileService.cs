@@ -31,17 +31,56 @@ public class FileService : IFileService
         _s3Config = s3Config.Value;
         _logger = logger;
 
+        ValidateConfiguration();
+        _s3Client = CreateS3Client();
+    }
+
+    private void ValidateConfiguration()
+    {
+        if (string.IsNullOrEmpty(_s3Config.AccessKey))
+            throw new ArgumentException("Access Key is required");
+
+        if (string.IsNullOrEmpty(_s3Config.SecretKey))
+            throw new ArgumentException("Secret Key is required");
+
+        if (string.IsNullOrEmpty(_s3Config.BucketName))
+            throw new ArgumentException("Bucket Name is required");
+    }
+
+    private IAmazonS3 CreateS3Client()
+    {
         var config = new AmazonS3Config();
 
         if (!string.IsNullOrEmpty(_s3Config.ServiceURL))
         {
-            config.ServiceURL = _s3Config.ServiceURL;        // e.g. "http://localhost:9000"
-            config.ForcePathStyle = true;                    // Required for MinIO
-            config.UseHttp = true;                           // Ensure it signs as http://
+            // S3-compatible storage (Tigris/MinIO)
+            config.ServiceURL = _s3Config.ServiceURL;
+            config.ForcePathStyle = true;
+            config.UseHttp = _s3Config.ServiceURL.StartsWith("http://");
             config.UseDualstackEndpoint = false;
+
+            // Set region based on configuration
+            if (!string.IsNullOrEmpty(_s3Config.Region))
+            {
+                if (_s3Config.Region.ToLower() == "auto")
+                {
+                    // Auto region - don't set region endpoint
+                    config.RegionEndpoint = null;
+                }
+                else
+                {
+                    // Set specific region
+                    config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(_s3Config.Region);
+                }
+            }
+            else if (!_s3Config.ServiceURL.Contains("localhost"))
+            {
+                // Default to Singapore region for non-localhost services
+                config.RegionEndpoint = Amazon.RegionEndpoint.APSoutheast1;
+            }
         }
 
-        _s3Client = new AmazonS3Client(
+        return new AmazonS3Client(
             _s3Config.AccessKey,
             _s3Config.SecretKey,
             config
@@ -53,22 +92,18 @@ public class FileService : IFileService
         try
         {
             var fileName = customFileName ?? $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            using var stream = file.OpenReadStream();
 
-            using var ms = new MemoryStream();
-            await file.CopyToAsync(ms);
-            ms.Position = 0;
-
-            var uploadRequest = new TransferUtilityUploadRequest
+            var putReq = new PutObjectRequest
             {
-                InputStream = ms,
-                Key = fileName,
                 BucketName = _s3Config.BucketName,
-                ContentType = file.ContentType
+                Key = fileName,
+                InputStream = stream,
+                ContentType = file.ContentType,
+                UseChunkEncoding = false
             };
 
-            using var transferUtility = new TransferUtility(_s3Client);
-            await transferUtility.UploadAsync(uploadRequest);
-
+            await _s3Client.PutObjectAsync(putReq);
             return fileName;
         }
         catch (Exception ex)

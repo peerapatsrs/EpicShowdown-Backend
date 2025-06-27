@@ -19,17 +19,41 @@ using EpicShowdown.API.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options =>
 {
+    // Debug logging
+    Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+
+    // ใน Development ให้ appsettings.Development.json มีความสำคัญสูงสุด
+    if (builder.Environment.IsDevelopment())
+    {
+        var kestrelSection = builder.Configuration.GetSection("Kestrel");
+        if (kestrelSection.Exists())
+        {
+            Console.WriteLine("Loading Kestrel configuration from appsettings.Development.json");
+            kestrelSection.Bind(options);
+            return; // ออกจาก ConfigureKestrel ถ้าโหลดจาก appsettings สำเร็จ
+        }
+    }
+
+    // ตรวจสอบ ASPNETCORE_URLS (วิธีมาตรฐานของ ASP.NET Core)
+    var aspNetCoreUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
     var portEnv = Environment.GetEnvironmentVariable("PORT");
+
+    Console.WriteLine($"ASPNETCORE_URLS: {aspNetCoreUrls ?? "null"}");
+    Console.WriteLine($"PORT environment variable: {portEnv ?? "null"}");
+
+    // ใช้ ASPNETCORE_URLS ถ้ามี ถ้าไม่มีค่อยใช้ PORT
+    if (!string.IsNullOrEmpty(aspNetCoreUrls))
+    {
+        Console.WriteLine($"Using ASPNETCORE_URLS: {aspNetCoreUrls}");
+        // ASPNETCORE_URLS จะถูกจัดการโดย ASP.NET Core เอง
+        return;
+    }
+
     var port = string.IsNullOrEmpty(portEnv) ? 8080 : int.Parse(portEnv);
+    Console.WriteLine($"Using port: {port}");
 
     // ฟัง HTTP เท่านั้นบน fly.io (TLS terminate ที่ edge ให้ fly.io)
     options.ListenAnyIP(port);
-
-    // Bind เพิ่มเติมแค่ใน Dev (ถ้ามีคอนฟิกอื่นใน appsettings.Development.json)
-    if (builder.Environment.IsDevelopment())
-    {
-        builder.Configuration.GetSection("Kestrel").Bind(options);
-    }
 });
 
 // Configure DateTime to use UTC

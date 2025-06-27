@@ -4,7 +4,7 @@ Backend service for EpicShowdown application using .NET 9 with both REST API and
 
 ## Features
 
-- REST API (Port 8001)
+- REST API (Port 8080)
 - gRPC (Port 8101)
 - PostgreSQL Database
 - Redis Cache
@@ -46,7 +46,7 @@ dotnet run --environment Production
 
 ## API Documentation
 
-- REST API: http://localhost:8001/swagger
+- REST API: http://localhost:8080/swagger
 - gRPC: http://localhost:8101
 
 ## Project Structure
