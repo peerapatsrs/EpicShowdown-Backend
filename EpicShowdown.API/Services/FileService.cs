@@ -64,8 +64,8 @@ public class FileService : IFileService
             {
                 if (_s3Config.Region.ToLower() == "auto")
                 {
-                    // Auto region - don't set region endpoint
-                    config.RegionEndpoint = null;
+                    // For Tigris Cloud Storage, use ap-southeast-1 (Singapore) for better performance in Thailand
+                    config.RegionEndpoint = Amazon.RegionEndpoint.APSoutheast1;
                 }
                 else
                 {
