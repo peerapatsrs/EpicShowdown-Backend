@@ -5,7 +5,7 @@ primary_region = "sin"  # Singapore region
 [env]
   DOTNET_ENVIRONMENT = "Dev"
   ASPNETCORE_ENVIRONMENT = "Dev"
-  ASPNETCORE_URLS = "http://0.0.0.0:8080"
+  ASPNETCORE_URLS = "http://*:8080"
   PORT = "8080"
 
 # สัญญาณปิดแอปที่ fly จะใช้
