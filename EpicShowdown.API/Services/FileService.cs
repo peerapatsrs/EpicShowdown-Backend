@@ -53,17 +53,11 @@ public class FileService : IFileService
 
         if (!string.IsNullOrEmpty(_s3Config.ServiceURL))
         {
-            // S3-compatible storage (Tigris/MinIO)
-            config.ServiceURL = _s3Config.ServiceURL;
-            config.ForcePathStyle = true;
-            config.UseHttp = _s3Config.ServiceURL.StartsWith("http://");
-            config.UseDualstackEndpoint = false;
-
             // Log configuration for debugging
             _logger.LogInformation("S3 Configuration - ServiceURL: {ServiceURL}, Region: {Region}, AccessKey: {AccessKey}",
                 _s3Config.ServiceURL, _s3Config.Region, _s3Config.AccessKey?.Substring(0, Math.Min(10, _s3Config.AccessKey.Length)) + "...");
 
-            // Set region based on configuration
+            // Set region first (if needed)
             if (!string.IsNullOrEmpty(_s3Config.Region))
             {
                 if (_s3Config.Region.ToLower() == "auto")
@@ -85,6 +79,12 @@ public class FileService : IFileService
                 config.RegionEndpoint = Amazon.RegionEndpoint.APSoutheast1;
                 _logger.LogInformation("No region specified, using default ap-southeast-1");
             }
+
+            // Set S3-compatible storage configuration AFTER setting region
+            config.ServiceURL = _s3Config.ServiceURL;
+            config.ForcePathStyle = true;
+            config.UseHttp = _s3Config.ServiceURL.StartsWith("http://");
+            config.UseDualstackEndpoint = false;
         }
 
         _logger.LogInformation("Final S3 Config - ServiceURL: {ServiceURL}, RegionEndpoint: {RegionEndpoint}",
