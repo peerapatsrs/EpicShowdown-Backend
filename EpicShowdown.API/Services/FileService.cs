@@ -59,6 +59,10 @@ public class FileService : IFileService
             config.UseHttp = _s3Config.ServiceURL.StartsWith("http://");
             config.UseDualstackEndpoint = false;
 
+            // Log configuration for debugging
+            _logger.LogInformation("S3 Configuration - ServiceURL: {ServiceURL}, Region: {Region}, AccessKey: {AccessKey}",
+                _s3Config.ServiceURL, _s3Config.Region, _s3Config.AccessKey?.Substring(0, Math.Min(10, _s3Config.AccessKey.Length)) + "...");
+
             // Set region based on configuration
             if (!string.IsNullOrEmpty(_s3Config.Region))
             {
@@ -66,19 +70,25 @@ public class FileService : IFileService
                 {
                     // For Tigris Cloud Storage, use ap-southeast-1 (Singapore) for better performance in Thailand
                     config.RegionEndpoint = Amazon.RegionEndpoint.APSoutheast1;
+                    _logger.LogInformation("Using auto region, setting to ap-southeast-1");
                 }
                 else
                 {
                     // Set specific region
                     config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(_s3Config.Region);
+                    _logger.LogInformation("Using specific region: {Region}", _s3Config.Region);
                 }
             }
             else if (!_s3Config.ServiceURL.Contains("localhost"))
             {
                 // Default to Singapore region for non-localhost services
                 config.RegionEndpoint = Amazon.RegionEndpoint.APSoutheast1;
+                _logger.LogInformation("No region specified, using default ap-southeast-1");
             }
         }
+
+        _logger.LogInformation("Final S3 Config - ServiceURL: {ServiceURL}, RegionEndpoint: {RegionEndpoint}",
+            config.ServiceURL, config.RegionEndpoint?.SystemName ?? "null");
 
         return new AmazonS3Client(
             _s3Config.AccessKey,
